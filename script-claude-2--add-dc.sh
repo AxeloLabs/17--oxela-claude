@@ -27,8 +27,8 @@ mkdir -p dataconnect/{schema,connectors/ecommerce}
 
 cat > dataconnect/dataconnect.yaml << 'EOF'
 specVersion: 'v1alpha'
-serviceId: 'ecommerce-dataconnect'
-location: 'europe-west1'
+serviceId: 'oxela-auth-service'
+location: 'us-east4'
 schema:
   source: './schema'
   datasource:
@@ -855,8 +855,8 @@ let dataConnect: DataConnect
 if (typeof window !== 'undefined') {
   dataConnect = getDataConnect(app, {
     connector: 'ecommerce',
-    location: 'europe-west1',
-    service: 'ecommerce-dataconnect'
+    location: 'us-east4',
+    service: 'oxela-auth-service'
   })
 }
 
@@ -1220,7 +1220,7 @@ firebase init dataconnect
 # Sélectionner:
 # - Use an existing project (ou créer un nouveau)
 # - PostgreSQL (Cloud SQL)
-# - Choisir la région (europe-west1 recommandé)
+# - Choisir la région (us-east4 recommandé)
 ```
 
 ## Déploiement
@@ -1264,7 +1264,7 @@ const product = await getProductBySlug({ slug: 'mon-produit' })
 Ajoutez dans vos fichiers `.env.local`:
 
 ```
-NEXT_PUBLIC_FIREBASE_DATA_CONNECT_URL=https://your-project.europe-west1.dataconnect.firebase.google.com
+NEXT_PUBLIC_FIREBASE_DATA_CONNECT_URL=https://your-project.us-east4.dataconnect.firebase.google.com
 ```
 EOF
 
@@ -2019,8 +2019,8 @@ firebase init dataconnect
 Répondez aux questions:
 - **Select project**: Choisissez votre projet Firebase existant
 - **Database**: PostgreSQL (Cloud SQL)
-- **Region**: europe-west1 (ou votre région préférée)
-- **Service ID**: ecommerce-dataconnect
+- **Region**: us-east4 (ou votre région préférée)
+- **Service ID**: oxela-auth-service
 - **Database name**: ecommerce
 
 ### Étape 3: Déployer le schéma
@@ -2052,7 +2052,7 @@ Récupérez l'URL de votre Data Connect dans la console Firebase, puis ajoutez-l
 NEXT_PUBLIC_FIREBASE_API_KEY=votre_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=votre_projet.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=votre_projet_id
-NEXT_PUBLIC_FIREBASE_DATA_CONNECT_URL=https://votre-projet.europe-west1.dataconnect.firebase.google.com
+NEXT_PUBLIC_FIREBASE_DATA_CONNECT_URL=https://votre-projet.us-east4.dataconnect.firebase.google.com
 ```
 
 ## 3. Utilisation dans le code
@@ -2256,3 +2256,40 @@ echo "   • Vitrine: /products et /products/[slug] (avec SEO)"
 echo "   • Dashboard: /cart et /orders"
 echo "   • Admin: /products (gestion)"
 echo ""
+
+
+
+
+# 📦 Ce que le script ajoute
+# 1. Structure Firebase Data Connect
+
+# Schéma GraphQL complet pour un e-commerce
+# 7 tables : Users, Products, Categories, Orders, OrderItems, CartItems, Reviews
+# Relations complètes entre les tables
+# 20+ queries pour lire les données
+# 15+ mutations pour créer/modifier/supprimer
+
+# 2. Hooks React personnalisés
+
+# useAuth() - Gestion de l'authentification
+# useProducts() - Récupération des produits
+# useCart() - Gestion du panier
+# Synchronisation automatique avec Firebase Auth
+
+# 3. Composants UI E-commerce
+
+# ProductCard - Carte produit avec prix, promo, stock
+# CartItem - Item du panier avec quantité
+# OrderSummary - Récapitulatif de commande
+
+# 4. Pages d'exemple
+
+# Vitrine : Liste produits + page détail (SEO optimisé)
+# Dashboard : Panier + historique commandes
+# Admin : Gestion des produits
+
+# 5. Documentation complète
+
+# FIREBASE_SETUP.md - Guide d'installation détaillé
+# firebase-setup.sh - Script d'aide
+# dataconnect/README.md - Documentation du schéma

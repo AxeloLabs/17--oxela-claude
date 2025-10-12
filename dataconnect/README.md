@@ -32,7 +32,7 @@ firebase init dataconnect
 # Sélectionner:
 # - Use an existing project (ou créer un nouveau)
 # - PostgreSQL (Cloud SQL)
-# - Choisir la région (europe-west1 recommandé)
+# - Choisir la région (us-east4 recommandé)
 ```
 
 ## Déploiement
@@ -50,13 +50,13 @@ firebase dataconnect:sdk:generate
 Après génération du SDK, vous pouvez utiliser les fonctions dans votre code:
 
 ```typescript
-import { listProducts, getProductBySlug } from '@mon-projet/firebase'
+import { listProducts, getProductBySlug } from "@mon-projet/firebase";
 
 // Lister les produits
-const products = await listProducts({ limit: 20 })
+const products = await listProducts({ limit: 20 });
 
 // Récupérer un produit
-const product = await getProductBySlug({ slug: 'mon-produit' })
+const product = await getProductBySlug({ slug: "mon-produit" });
 ```
 
 ## Schéma de données
@@ -76,5 +76,5 @@ const product = await getProductBySlug({ slug: 'mon-produit' })
 Ajoutez dans vos fichiers `.env.local`:
 
 ```
-NEXT_PUBLIC_FIREBASE_DATA_CONNECT_URL=https://your-project.europe-west1.dataconnect.firebase.google.com
+NEXT_PUBLIC_FIREBASE_DATA_CONNECT_URL=https://your-project.us-east4.dataconnect.firebase.google.com
 ```

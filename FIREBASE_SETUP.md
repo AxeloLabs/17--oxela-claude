@@ -23,10 +23,11 @@ firebase init dataconnect
 ```
 
 Répondez aux questions:
+
 - **Select project**: Choisissez votre projet Firebase existant
 - **Database**: PostgreSQL (Cloud SQL)
-- **Region**: europe-west1 (ou votre région préférée)
-- **Service ID**: ecommerce-dataconnect
+- **Region**: us-east4 (ou votre région préférée)
+- **Service ID**: oxela-auth-service
 - **Database name**: ecommerce
 
 ### Étape 3: Déployer le schéma
@@ -37,6 +38,7 @@ firebase deploy --only dataconnect
 ```
 
 Cette commande va:
+
 - Créer la base de données PostgreSQL
 - Créer toutes les tables définies dans le schéma
 - Déployer les queries et mutations
@@ -58,7 +60,7 @@ Récupérez l'URL de votre Data Connect dans la console Firebase, puis ajoutez-l
 NEXT_PUBLIC_FIREBASE_API_KEY=votre_api_key
 NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=votre_projet.firebaseapp.com
 NEXT_PUBLIC_FIREBASE_PROJECT_ID=votre_projet_id
-NEXT_PUBLIC_FIREBASE_DATA_CONNECT_URL=https://votre-projet.europe-west1.dataconnect.firebase.google.com
+NEXT_PUBLIC_FIREBASE_DATA_CONNECT_URL=https://votre-projet.us-east4.dataconnect.firebase.google.com
 ```
 
 ## 3. Utilisation dans le code
@@ -66,48 +68,48 @@ NEXT_PUBLIC_FIREBASE_DATA_CONNECT_URL=https://votre-projet.europe-west1.dataconn
 ### Exemple: Lister les produits
 
 ```typescript
-import { listProducts } from '@mon-projet/firebase'
+import { listProducts } from "@mon-projet/firebase";
 
 async function getProducts() {
-  const result = await listProducts({ limit: 20 })
-  return result.data.products
+  const result = await listProducts({ limit: 20 });
+  return result.data.products;
 }
 ```
 
 ### Exemple: Ajouter au panier
 
 ```typescript
-import { addToCart } from '@mon-projet/firebase'
+import { addToCart } from "@mon-projet/firebase";
 
 async function handleAddToCart(userId: string, productId: string) {
   await addToCart({
     userId,
     productId,
-    quantity: 1
-  })
+    quantity: 1,
+  });
 }
 ```
 
 ### Exemple avec les hooks React
 
 ```typescript
-'use client'
+"use client";
 
-import { useProducts } from '@mon-projet/firebase'
+import { useProducts } from "@mon-projet/firebase";
 
 export default function ProductsPage() {
-  const { products, loading, error } = useProducts()
+  const { products, loading, error } = useProducts();
 
-  if (loading) return <div>Chargement...</div>
-  if (error) return <div>Erreur: {error.message}</div>
+  if (loading) return <div>Chargement...</div>;
+  if (error) return <div>Erreur: {error.message}</div>;
 
   return (
     <div>
-      {products.map(product => (
+      {products.map((product) => (
         <div key={product.id}>{product.name}</div>
       ))}
     </div>
-  )
+  );
 }
 ```
 
@@ -133,46 +135,49 @@ Pour ajouter des données de test, vous pouvez utiliser les mutations dans la co
 
 ```typescript
 // scripts/seed-database.ts
-import { 
+import {
   createCategory,
   createProduct,
-  upsertUser 
-} from '@mon-projet/firebase'
+  upsertUser,
+} from "@mon-projet/firebase";
 
 async function seed() {
   // Créer des catégories
   const category = await createCategory({
-    name: 'Électronique',
-    slug: 'electronique',
-    description: 'Produits électroniques'
-  })
+    name: "Électronique",
+    slug: "electronique",
+    description: "Produits électroniques",
+  });
 
   // Créer des produits
   await createProduct({
-    name: 'Smartphone XYZ',
-    slug: 'smartphone-xyz',
-    description: 'Le meilleur smartphone',
+    name: "Smartphone XYZ",
+    slug: "smartphone-xyz",
+    description: "Le meilleur smartphone",
     price: 599.99,
     stock: 50,
-    imageUrl: 'https://...',
-    categoryId: category.data.category_insert.id
-  })
+    imageUrl: "https://...",
+    categoryId: category.data.category_insert.id,
+  });
 }
 
-seed().catch(console.error)
+seed().catch(console.error);
 ```
 
 ## 6. Résolution de problèmes
 
 ### Erreur: "Service not found"
+
 - Vérifiez que le déploiement s'est bien passé
 - Vérifiez l'URL dans vos variables d'environnement
 
 ### Erreur: "Unauthorized"
+
 - Vérifiez que Firebase Auth est bien configuré
 - Vérifiez les règles d'authentification dans vos queries/mutations
 
 ### Le SDK ne se génère pas
+
 - Vérifiez que le fichier `connector.yaml` est correct
 - Assurez-vous d'être dans le bon dossier lors de l'exécution
 
