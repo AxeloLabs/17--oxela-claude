@@ -1,9 +1,13 @@
-specVersion: 'v1alpha'
-serviceId: 'ecommerce-dataconnect'
-location: 'europe-west1'
+specVersion: "v1"
+serviceId: "oxela-auth-service"
+location: "us-east4"
 schema:
-  source: './schema'
+  source: "./schema"
   datasource:
     postgresql:
-      database: 'ecommerce'
-connectorDirs: ['./connectors']
+      database: "oxela-auth-database"
+      cloudSql:
+        instanceId: "oxela-auth-instance"
+        # schemaValidation: "STRICT"     # STRICT mode makes Postgres schema match Data Connect exactly.
+        # schemaValidation: "COMPATIBLE" # COMPATIBLE mode makes Postgres schema compatible with Data Connect.
+connectorDirs: ["./example"]
