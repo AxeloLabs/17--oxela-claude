@@ -1,0 +1,9 @@
+specVersion: 'v1alpha'
+serviceId: 'ecommerce-dataconnect'
+location: 'europe-west1'
+schema:
+  source: './schema'
+  datasource:
+    postgresql:
+      database: 'ecommerce'
+connectorDirs: ['./connectors']

@@ -1,0 +1,152 @@
+# Types et énumérations
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+}
+
+enum ProductStatus {
+  ACTIVE
+  INACTIVE
+  OUT_OF_STOCK
+}
+
+# Type User (lié à Firebase Auth)
+type User @table {
+  id: UUID! @default(expr: "uuidV4()")
+  firebaseUid: String! @unique
+  email: String! @unique
+  displayName: String
+  photoURL: String
+  role: UserRole! @default(value: "CUSTOMER")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+  
+  # Relations
+  orders: [Order!] @relationship
+  reviews: [Review!] @relationship
+  cartItems: [CartItem!] @relationship
+}
+
+# Type Category
+type Category @table {
+  id: UUID! @default(expr: "uuidV4()")
+  name: String!
+  slug: String! @unique
+  description: String
+  imageUrl: String
+  parentId: UUID
+  parent: Category @relationship
+  children: [Category!] @relationship
+  products: [Product!] @relationship
+  createdAt: Timestamp! @default(expr: "request.time")
+}
+
+# Type Product
+type Product @table {
+  id: UUID! @default(expr: "uuidV4()")
+  name: String!
+  slug: String! @unique
+  description: String!
+  price: Float!
+  compareAtPrice: Float
+  stock: Int! @default(value: "0")
+  status: ProductStatus! @default(value: "ACTIVE")
+  imageUrl: String!
+  images: [String!]
+  categoryId: UUID!
+  category: Category! @relationship
+  sku: String @unique
+  weight: Float
+  dimensions: String
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+  
+  # Relations
+  orderItems: [OrderItem!] @relationship
+  reviews: [Review!] @relationship
+  cartItems: [CartItem!] @relationship
+}
+
+# Type Order
+type Order @table {
+  id: UUID! @default(expr: "uuidV4()")
+  orderNumber: String! @unique
+  userId: UUID!
+  user: User! @relationship
+  status: OrderStatus! @default(value: "PENDING")
+  subtotal: Float!
+  shippingCost: Float!
+  tax: Float!
+  total: Float!
+  
+  # Adresse de livraison
+  shippingName: String!
+  shippingAddress: String!
+  shippingCity: String!
+  shippingPostalCode: String!
+  shippingCountry: String!
+  
+  # Adresse de facturation
+  billingName: String!
+  billingAddress: String!
+  billingCity: String!
+  billingPostalCode: String!
+  billingCountry: String!
+  
+  paymentMethod: String!
+  paymentStatus: String!
+  
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+  
+  # Relations
+  items: [OrderItem!] @relationship
+}
+
+# Type OrderItem
+type OrderItem @table {
+  id: UUID! @default(expr: "uuidV4()")
+  orderId: UUID!
+  order: Order! @relationship
+  productId: UUID!
+  product: Product! @relationship
+  quantity: Int!
+  priceAtTime: Float!
+  subtotal: Float!
+}
+
+# Type Review
+type Review @table {
+  id: UUID! @default(expr: "uuidV4()")
+  productId: UUID!
+  product: Product! @relationship
+  userId: UUID!
+  user: User! @relationship
+  rating: Int!
+  title: String
+  comment: String!
+  verified: Boolean! @default(value: "false")
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}
+
+# Type CartItem (panier)
+type CartItem @table {
+  id: UUID! @default(expr: "uuidV4()")
+  userId: UUID!
+  user: User! @relationship
+  productId: UUID!
+  product: Product! @relationship
+  quantity: Int!
+  createdAt: Timestamp! @default(expr: "request.time")
+  updatedAt: Timestamp! @default(expr: "request.time")
+}

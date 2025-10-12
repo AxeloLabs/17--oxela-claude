@@ -1,0 +1,294 @@
+# ============================================================
+# QUERIES - Utilisateurs
+# ============================================================
+
+# Récupérer un utilisateur par son Firebase UID
+query GetUserByFirebaseUid($firebaseUid: String!) @auth(level: USER) {
+  user(firebaseUid: $firebaseUid) {
+    id
+    firebaseUid
+    email
+    displayName
+    photoURL
+    role
+    createdAt
+  }
+}
+
+# Récupérer tous les utilisateurs (admin only)
+query ListUsers @auth(level: USER) {
+  users {
+    id
+    email
+    displayName
+    role
+    createdAt
+  }
+}
+
+# ============================================================
+# QUERIES - Produits
+# ============================================================
+
+# Liste tous les produits actifs
+query ListProducts(
+  $limit: Int = 20
+  $offset: Int = 0
+  $categoryId: UUID
+) {
+  products(
+    where: { 
+      status: { eq: "ACTIVE" }
+      categoryId: { eq: $categoryId }
+    }
+    limit: $limit
+    offset: $offset
+    orderBy: { createdAt: DESC }
+  ) {
+    id
+    name
+    slug
+    description
+    price
+    compareAtPrice
+    stock
+    status
+    imageUrl
+    images
+    category {
+      id
+      name
+      slug
+    }
+    createdAt
+  }
+}
+
+# Récupérer un produit par son slug
+query GetProductBySlug($slug: String!) {
+  product(slug: $slug) {
+    id
+    name
+    slug
+    description
+    price
+    compareAtPrice
+    stock
+    status
+    imageUrl
+    images
+    sku
+    weight
+    dimensions
+    category {
+      id
+      name
+      slug
+    }
+    reviews {
+      id
+      rating
+      title
+      comment
+      verified
+      user {
+        displayName
+        photoURL
+      }
+      createdAt
+    }
+    createdAt
+    updatedAt
+  }
+}
+
+# Recherche de produits
+query SearchProducts($searchTerm: String!) {
+  products(
+    where: {
+      OR: [
+        { name: { contains: $searchTerm } }
+        { description: { contains: $searchTerm } }
+      ]
+      status: { eq: "ACTIVE" }
+    }
+    limit: 20
+  ) {
+    id
+    name
+    slug
+    description
+    price
+    imageUrl
+    category {
+      name
+    }
+  }
+}
+
+# ============================================================
+# QUERIES - Catégories
+# ============================================================
+
+# Liste toutes les catégories
+query ListCategories {
+  categories(orderBy: { name: ASC }) {
+    id
+    name
+    slug
+    description
+    imageUrl
+    parent {
+      id
+      name
+    }
+  }
+}
+
+# Récupérer une catégorie par son slug avec ses produits
+query GetCategoryBySlug($slug: String!) {
+  category(slug: $slug) {
+    id
+    name
+    slug
+    description
+    imageUrl
+    products(where: { status: { eq: "ACTIVE" } }) {
+      id
+      name
+      slug
+      price
+      imageUrl
+      stock
+    }
+  }
+}
+
+# ============================================================
+# QUERIES - Panier
+# ============================================================
+
+# Récupérer le panier d'un utilisateur
+query GetUserCart($userId: UUID!) @auth(level: USER) {
+  cartItems(where: { userId: { eq: $userId } }) {
+    id
+    quantity
+    product {
+      id
+      name
+      slug
+      price
+      imageUrl
+      stock
+      status
+    }
+    createdAt
+  }
+}
+
+# ============================================================
+# QUERIES - Commandes
+# ============================================================
+
+# Liste les commandes d'un utilisateur
+query ListUserOrders($userId: UUID!) @auth(level: USER) {
+  orders(
+    where: { userId: { eq: $userId } }
+    orderBy: { createdAt: DESC }
+  ) {
+    id
+    orderNumber
+    status
+    total
+    createdAt
+    items {
+      id
+      quantity
+      priceAtTime
+      product {
+        name
+        imageUrl
+      }
+    }
+  }
+}
+
+# Détails d'une commande
+query GetOrderById($orderId: UUID!) @auth(level: USER) {
+  order(id: $orderId) {
+    id
+    orderNumber
+    status
+    subtotal
+    shippingCost
+    tax
+    total
+    shippingName
+    shippingAddress
+    shippingCity
+    shippingPostalCode
+    shippingCountry
+    billingName
+    billingAddress
+    billingCity
+    billingPostalCode
+    billingCountry
+    paymentMethod
+    paymentStatus
+    createdAt
+    items {
+      id
+      quantity
+      priceAtTime
+      subtotal
+      product {
+        name
+        imageUrl
+        slug
+      }
+    }
+  }
+}
+
+# Liste toutes les commandes (admin)
+query ListAllOrders($status: OrderStatus) @auth(level: USER) {
+  orders(
+    where: { status: { eq: $status } }
+    orderBy: { createdAt: DESC }
+    limit: 50
+  ) {
+    id
+    orderNumber
+    status
+    total
+    user {
+      email
+      displayName
+    }
+    createdAt
+  }
+}
+
+# ============================================================
+# QUERIES - Reviews
+# ============================================================
+
+# Reviews d'un produit
+query GetProductReviews($productId: UUID!, $limit: Int = 10) {
+  reviews(
+    where: { productId: { eq: $productId } }
+    orderBy: { createdAt: DESC }
+    limit: $limit
+  ) {
+    id
+    rating
+    title
+    comment
+    verified
+    user {
+      displayName
+      photoURL
+    }
+    createdAt
+  }
+}

@@ -1,0 +1,5 @@
+connectorId: 'ecommerce'
+generate:
+  javascriptSdk:
+    outputDir: '../../../packages/firebase/src/generated'
+    package: '@mon-projet/firebase'

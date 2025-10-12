@@ -5,29 +5,44 @@ let dataConnect: DataConnect
 
 if (typeof window !== 'undefined') {
   dataConnect = getDataConnect(app, {
-    connector: 'your-connector-name',
+    connector: 'ecommerce',
     location: 'europe-west1',
-    service: 'your-service-id'
+    service: 'ecommerce-dataconnect'
   })
 }
 
 export { dataConnect }
 
-// Types d'exemple - à adapter selon votre schéma
-export interface User {
+// Réexporter les types et fonctions générés
+export * from './generated'
+
+// Types personnalisés pour l'application
+export interface CartItemWithProduct {
   id: string
-  email: string
-  name: string
+  quantity: number
+  product: {
+    id: string
+    name: string
+    slug: string
+    price: number
+    imageUrl: string
+    stock: number
+  }
+}
+
+export interface OrderWithItems {
+  id: string
+  orderNumber: string
+  status: string
+  total: number
   createdAt: string
-}
-
-// Fonctions helpers d'exemple
-export async function getUsers(): Promise<User[]> {
-  // TODO: Implémentation avec Firebase Data Connect
-  return []
-}
-
-export async function getUserById(id: string): Promise<User | null> {
-  // TODO: Implémentation avec Firebase Data Connect
-  return null
+  items: {
+    id: string
+    quantity: number
+    priceAtTime: number
+    product: {
+      name: string
+      imageUrl: string
+    }
+  }[]
 }
