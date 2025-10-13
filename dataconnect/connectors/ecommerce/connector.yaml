@@ -1,5 +1,13 @@
-connectorId: 'ecommerce'
+# dataconnect/connectors/ecommerce/connector.yaml
+# Configuration SIMPLIFIÉE - Recommandée pour monorepo
+
+connectorId: ecommerce
+
 generate:
   javascriptSdk:
-    outputDir: '../../../packages/firebase/src/generated'
-    package: '@mon-projet/firebase'
+    # Générer UNIQUEMENT dans le package partagé
+    - outputDir: ../../../packages/firebase/src/generated
+      package: "@mon-projet/firebase"
+      packageJsonDir: ../../../packages/firebase
+      react: true # Active les hooks React
+      angular: false

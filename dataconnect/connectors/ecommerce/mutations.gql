@@ -2,27 +2,37 @@
 # MUTATIONS - Utilisateurs
 # ============================================================
 
-# Créer ou mettre à jour un utilisateur après connexion Firebase Auth
-mutation UpsertUser(
+# Créer un utilisateur après connexion Firebase Auth
+mutation CreateUser(
   $firebaseUid: String!
   $email: String!
   $displayName: String
   $photoURL: String
 ) @auth(level: USER) {
-  user_upsert(
+  user_insert(
     data: {
       firebaseUid: $firebaseUid
       email: $email
       displayName: $displayName
       photoURL: $photoURL
     }
-  ) {
-    id
-    firebaseUid
-    email
-    displayName
-    role
-  }
+  )
+}
+
+# Mettre à jour un utilisateur
+mutation UpdateUser(
+  $firebaseUid: String!
+  $displayName: String
+  $photoURL: String
+) @auth(level: USER) {
+  user_update(
+    key: { firebaseUid: $firebaseUid }
+    data: {
+      displayName: $displayName
+      photoURL: $photoURL
+      updatedAt: { expr: "request.time" }
+    }
+  )
 }
 
 # ============================================================
@@ -55,11 +65,7 @@ mutation CreateProduct(
       images: $images
       sku: $sku
     }
-  ) {
-    id
-    name
-    slug
-  }
+  )
 }
 
 # Mettre à jour un produit
@@ -72,7 +78,7 @@ mutation UpdateProduct(
   $status: ProductStatus
 ) @auth(level: USER) {
   product_update(
-    id: $id
+    key: { id: $id }
     data: {
       name: $name
       description: $description
@@ -81,18 +87,12 @@ mutation UpdateProduct(
       status: $status
       updatedAt: { expr: "request.time" }
     }
-  ) {
-    id
-    name
-    updatedAt
-  }
+  )
 }
 
 # Supprimer un produit
 mutation DeleteProduct($id: UUID!) @auth(level: USER) {
-  product_delete(id: $id) {
-    id
-  }
+  product_delete(key: { id: $id })
 }
 
 # ============================================================
@@ -115,11 +115,24 @@ mutation CreateCategory(
       imageUrl: $imageUrl
       parentId: $parentId
     }
-  ) {
-    id
-    name
-    slug
-  }
+  )
+}
+
+# Mettre à jour une catégorie
+mutation UpdateCategory(
+  $id: UUID!
+  $name: String
+  $description: String
+  $imageUrl: String
+) @auth(level: USER) {
+  category_update(
+    key: { id: $id }
+    data: {
+      name: $name
+      description: $description
+      imageUrl: $imageUrl
+    }
+  )
 }
 
 # ============================================================
@@ -138,10 +151,7 @@ mutation AddToCart(
       productId: $productId
       quantity: $quantity
     }
-  ) {
-    id
-    quantity
-  }
+  )
 }
 
 # Mettre à jour la quantité dans le panier
@@ -150,27 +160,22 @@ mutation UpdateCartItemQuantity(
   $quantity: Int!
 ) @auth(level: USER) {
   cartItem_update(
-    id: $id
+    key: { id: $id }
     data: {
       quantity: $quantity
       updatedAt: { expr: "request.time" }
     }
-  ) {
-    id
-    quantity
-  }
+  )
 }
 
 # Supprimer du panier
 mutation RemoveFromCart($id: UUID!) @auth(level: USER) {
-  cartItem_delete(id: $id) {
-    id
-  }
+  cartItem_delete(key: { id: $id })
 }
 
 # Vider le panier
 mutation ClearCart($userId: UUID!) @auth(level: USER) {
-  cartItems_deleteMany(where: { userId: { eq: $userId } })
+  cartItem_deleteMany(where: { userId: { eq: $userId } })
 }
 
 # ============================================================
@@ -219,10 +224,7 @@ mutation CreateOrder(
       paymentMethod: $paymentMethod
       paymentStatus: $paymentStatus
     }
-  ) {
-    id
-    orderNumber
-  }
+  )
 }
 
 # Ajouter un article à une commande
@@ -241,9 +243,7 @@ mutation AddOrderItem(
       priceAtTime: $priceAtTime
       subtotal: $subtotal
     }
-  ) {
-    id
-  }
+  )
 }
 
 # Mettre à jour le statut d'une commande
@@ -252,15 +252,12 @@ mutation UpdateOrderStatus(
   $status: OrderStatus!
 ) @auth(level: USER) {
   order_update(
-    id: $id
+    key: { id: $id }
     data: {
       status: $status
       updatedAt: { expr: "request.time" }
     }
-  ) {
-    id
-    status
-  }
+  )
 }
 
 # ============================================================
@@ -283,10 +280,7 @@ mutation CreateReview(
       title: $title
       comment: $comment
     }
-  ) {
-    id
-    rating
-  }
+  )
 }
 
 # Mettre à jour un avis
@@ -297,25 +291,25 @@ mutation UpdateReview(
   $comment: String
 ) @auth(level: USER) {
   review_update(
-    id: $id
+    key: { id: $id }
     data: {
       rating: $rating
       title: $title
       comment: $comment
       updatedAt: { expr: "request.time" }
     }
-  ) {
-    id
-  }
+  )
 }
 
 # Vérifier un avis (admin)
 mutation VerifyReview($id: UUID!) @auth(level: USER) {
   review_update(
-    id: $id
+    key: { id: $id }
     data: { verified: true }
-  ) {
-    id
-    verified
-  }
+  )
+}
+
+# Supprimer un avis
+mutation DeleteReview($id: UUID!) @auth(level: USER) {
+  review_delete(key: { id: $id })
 }

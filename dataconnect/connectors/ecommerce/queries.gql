@@ -4,7 +4,7 @@
 
 # Récupérer un utilisateur par son Firebase UID
 query GetUserByFirebaseUid($firebaseUid: String!) @auth(level: USER) {
-  user(firebaseUid: $firebaseUid) {
+  users(where: { firebaseUid: { eq: $firebaseUid } }) {
     id
     firebaseUid
     email
@@ -17,7 +17,7 @@ query GetUserByFirebaseUid($firebaseUid: String!) @auth(level: USER) {
 
 # Récupérer tous les utilisateurs (admin only)
 query ListUsers @auth(level: USER) {
-  users {
+  users(orderBy: { createdAt: DESC }) {
     id
     email
     displayName
@@ -32,18 +32,20 @@ query ListUsers @auth(level: USER) {
 
 # Liste tous les produits actifs
 query ListProducts(
-  $limit: Int = 20
-  $offset: Int = 0
+  $limit: Int
+  $offset: Int
   $categoryId: UUID
 ) {
   products(
     where: { 
-      status: { eq: "ACTIVE" }
-      categoryId: { eq: $categoryId }
+      _and: [
+        { status: { eq: ACTIVE } }
+        { categoryId: { eq: $categoryId } }
+      ]
     }
     limit: $limit
     offset: $offset
-    orderBy: { createdAt: DESC }
+    orderBy: [{ createdAt: DESC }]
   ) {
     id
     name
@@ -55,18 +57,14 @@ query ListProducts(
     status
     imageUrl
     images
-    category {
-      id
-      name
-      slug
-    }
+    categoryId
     createdAt
   }
 }
 
 # Récupérer un produit par son slug
 query GetProductBySlug($slug: String!) {
-  product(slug: $slug) {
+  products(where: { slug: { eq: $slug } }) {
     id
     name
     slug
@@ -80,23 +78,7 @@ query GetProductBySlug($slug: String!) {
     sku
     weight
     dimensions
-    category {
-      id
-      name
-      slug
-    }
-    reviews {
-      id
-      rating
-      title
-      comment
-      verified
-      user {
-        displayName
-        photoURL
-      }
-      createdAt
-    }
+    categoryId
     createdAt
     updatedAt
   }
@@ -106,11 +88,15 @@ query GetProductBySlug($slug: String!) {
 query SearchProducts($searchTerm: String!) {
   products(
     where: {
-      OR: [
-        { name: { contains: $searchTerm } }
-        { description: { contains: $searchTerm } }
+      _and: [
+        {
+          _or: [
+            { name: { contains: $searchTerm } }
+            { description: { contains: $searchTerm } }
+          ]
+        }
+        { status: { eq: ACTIVE } }
       ]
-      status: { eq: "ACTIVE" }
     }
     limit: 20
   ) {
@@ -120,9 +106,7 @@ query SearchProducts($searchTerm: String!) {
     description
     price
     imageUrl
-    category {
-      name
-    }
+    categoryId
   }
 }
 
@@ -132,35 +116,44 @@ query SearchProducts($searchTerm: String!) {
 
 # Liste toutes les catégories
 query ListCategories {
-  categories(orderBy: { name: ASC }) {
+  categories(orderBy: [{ name: ASC }]) {
     id
     name
     slug
     description
     imageUrl
-    parent {
-      id
-      name
-    }
+    parentId
   }
 }
 
-# Récupérer une catégorie par son slug avec ses produits
+# Récupérer une catégorie par son slug
 query GetCategoryBySlug($slug: String!) {
-  category(slug: $slug) {
+  categories(where: { slug: { eq: $slug } }) {
     id
     name
     slug
     description
     imageUrl
-    products(where: { status: { eq: "ACTIVE" } }) {
-      id
-      name
-      slug
-      price
-      imageUrl
-      stock
+    parentId
+  }
+}
+
+# Produits d'une catégorie
+query GetProductsByCategory($categoryId: UUID!) {
+  products(
+    where: { 
+      _and: [
+        { categoryId: { eq: $categoryId } }
+        { status: { eq: ACTIVE } }
+      ]
     }
+  ) {
+    id
+    name
+    slug
+    price
+    imageUrl
+    stock
   }
 }
 
@@ -173,16 +166,18 @@ query GetUserCart($userId: UUID!) @auth(level: USER) {
   cartItems(where: { userId: { eq: $userId } }) {
     id
     quantity
-    product {
-      id
-      name
-      slug
-      price
-      imageUrl
-      stock
-      status
-    }
+    productId
     createdAt
+  }
+}
+
+# Détails d'un item du panier avec produit
+query GetCartItemWithProduct($id: UUID!) @auth(level: USER) {
+  cartItems(where: { id: { eq: $id } }) {
+    id
+    quantity
+    productId
+    userId
   }
 }
 
@@ -194,28 +189,19 @@ query GetUserCart($userId: UUID!) @auth(level: USER) {
 query ListUserOrders($userId: UUID!) @auth(level: USER) {
   orders(
     where: { userId: { eq: $userId } }
-    orderBy: { createdAt: DESC }
+    orderBy: [{ createdAt: DESC }]
   ) {
     id
     orderNumber
     status
     total
     createdAt
-    items {
-      id
-      quantity
-      priceAtTime
-      product {
-        name
-        imageUrl
-      }
-    }
   }
 }
 
 # Détails d'une commande
 query GetOrderById($orderId: UUID!) @auth(level: USER) {
-  order(id: $orderId) {
+  orders(where: { id: { eq: $orderId } }) {
     id
     orderNumber
     status
@@ -236,17 +222,18 @@ query GetOrderById($orderId: UUID!) @auth(level: USER) {
     paymentMethod
     paymentStatus
     createdAt
-    items {
-      id
-      quantity
-      priceAtTime
-      subtotal
-      product {
-        name
-        imageUrl
-        slug
-      }
-    }
+    userId
+  }
+}
+
+# Items d'une commande
+query GetOrderItems($orderId: UUID!) @auth(level: USER) {
+  orderItems(where: { orderId: { eq: $orderId } }) {
+    id
+    quantity
+    priceAtTime
+    subtotal
+    productId
   }
 }
 
@@ -254,17 +241,14 @@ query GetOrderById($orderId: UUID!) @auth(level: USER) {
 query ListAllOrders($status: OrderStatus) @auth(level: USER) {
   orders(
     where: { status: { eq: $status } }
-    orderBy: { createdAt: DESC }
+    orderBy: [{ createdAt: DESC }]
     limit: 50
   ) {
     id
     orderNumber
     status
     total
-    user {
-      email
-      displayName
-    }
+    userId
     createdAt
   }
 }
@@ -274,10 +258,10 @@ query ListAllOrders($status: OrderStatus) @auth(level: USER) {
 # ============================================================
 
 # Reviews d'un produit
-query GetProductReviews($productId: UUID!, $limit: Int = 10) {
+query GetProductReviews($productId: UUID!, $limit: Int) {
   reviews(
     where: { productId: { eq: $productId } }
-    orderBy: { createdAt: DESC }
+    orderBy: [{ createdAt: DESC }]
     limit: $limit
   ) {
     id
@@ -285,10 +269,23 @@ query GetProductReviews($productId: UUID!, $limit: Int = 10) {
     title
     comment
     verified
-    user {
-      displayName
-      photoURL
-    }
+    userId
+    createdAt
+  }
+}
+
+# Reviews d'un utilisateur
+query GetUserReviews($userId: UUID!) @auth(level: USER) {
+  reviews(
+    where: { userId: { eq: $userId } }
+    orderBy: [{ createdAt: DESC }]
+  ) {
+    id
+    rating
+    title
+    comment
+    verified
+    productId
     createdAt
   }
 }

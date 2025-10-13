@@ -26,14 +26,9 @@ type User @table {
   email: String! @unique
   displayName: String
   photoURL: String
-  role: UserRole! @default(value: "CUSTOMER")
+  role: UserRole! @default(value: CUSTOMER)
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
-  
-  # Relations
-  orders: [Order!] @relationship
-  reviews: [Review!] @relationship
-  cartItems: [CartItem!] @relationship
 }
 
 # Type Category
@@ -44,9 +39,6 @@ type Category @table {
   description: String
   imageUrl: String
   parentId: UUID
-  parent: Category @relationship
-  children: [Category!] @relationship
-  products: [Product!] @relationship
   createdAt: Timestamp! @default(expr: "request.time")
 }
 
@@ -58,22 +50,16 @@ type Product @table {
   description: String!
   price: Float!
   compareAtPrice: Float
-  stock: Int! @default(value: "0")
-  status: ProductStatus! @default(value: "ACTIVE")
+  stock: Int! @default(value: 0)
+  status: ProductStatus! @default(value: ACTIVE)
   imageUrl: String!
   images: [String!]
   categoryId: UUID!
-  category: Category! @relationship
   sku: String @unique
   weight: Float
   dimensions: String
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
-  
-  # Relations
-  orderItems: [OrderItem!] @relationship
-  reviews: [Review!] @relationship
-  cartItems: [CartItem!] @relationship
 }
 
 # Type Order
@@ -81,8 +67,7 @@ type Order @table {
   id: UUID! @default(expr: "uuidV4()")
   orderNumber: String! @unique
   userId: UUID!
-  user: User! @relationship
-  status: OrderStatus! @default(value: "PENDING")
+  status: OrderStatus! @default(value: PENDING)
   subtotal: Float!
   shippingCost: Float!
   tax: Float!
@@ -107,18 +92,13 @@ type Order @table {
   
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
-  
-  # Relations
-  items: [OrderItem!] @relationship
 }
 
 # Type OrderItem
 type OrderItem @table {
   id: UUID! @default(expr: "uuidV4()")
   orderId: UUID!
-  order: Order! @relationship
   productId: UUID!
-  product: Product! @relationship
   quantity: Int!
   priceAtTime: Float!
   subtotal: Float!
@@ -128,13 +108,11 @@ type OrderItem @table {
 type Review @table {
   id: UUID! @default(expr: "uuidV4()")
   productId: UUID!
-  product: Product! @relationship
   userId: UUID!
-  user: User! @relationship
   rating: Int!
   title: String
   comment: String!
-  verified: Boolean! @default(value: "false")
+  verified: Boolean! @default(value: false)
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
 }
@@ -143,9 +121,7 @@ type Review @table {
 type CartItem @table {
   id: UUID! @default(expr: "uuidV4()")
   userId: UUID!
-  user: User! @relationship
   productId: UUID!
-  product: Product! @relationship
   quantity: Int!
   createdAt: Timestamp! @default(expr: "request.time")
   updatedAt: Timestamp! @default(expr: "request.time")
