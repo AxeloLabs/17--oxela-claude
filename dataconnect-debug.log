@@ -1,0 +1,22 @@
+I1012 21:06:18.437654    4095 load.go:31] Reloading schema and connectors...
+W1012 21:06:18.579231    4095 control.go:68] [/emulator/oxela-auth-service 2fd8] connector "ecommerce" has errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+
+sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+I1012 21:06:18.580794    4095 control.go:94] [/emulator/oxela-auth-service 2fd8] UpdateResources(): done
+Main schema: sources: schema/schema.gql [2747B] 
+Connector "ecommerce": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+E1012 21:06:18.585030    4095 load.go:73] Could not load sources: 
+Errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+I1012 21:06:18.591757    4095 collector.go:107] schema extensions wrote into "/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect/.dataconnect/schema"
+Generated sources: prelude.gql [73219B] main/input.gql [102849B] main/relation.gql [43878B] main/query.gql [8782B] main/mutation.gql [23630B] 
+I1012 21:06:18.592088    4095 load.go:74] Finished reloading
+I1012 21:06:18.596558    4095 dev.go:102] Listening on address (HTTP + gRPC): 127.0.0.1:9399
+I1012 21:06:18.597775    4095 dev.go:102] Listening on address (HTTP + gRPC): [::1]:9399
+W1012 21:06:21.267341    4095 control.go:68] [/emulator/oxela-auth-service 3a2a] connector "ecommerce" has errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+
+sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+I1012 21:06:21.267396    4095 control.go:94] [/emulator/oxela-auth-service 3a2a] UpdateResources(): done
+Main schema: sources: schema/schema.gql [2747B] 
+Connector "ecommerce": sources: connectors/ecommerce/queries.gql [5361B] connectors/ecommerce/mutations.gql [6667B] 
+I1012 21:06:21.267429    4095 service.go:148] [/emulator/oxela-auth-service 3a2a] while configuring to server.Settings{ConnectionString:"dbname='oxela-auth-database' host='127.0.0.1' port='5432' sslmode='disable' dbname='oxela-auth-database'", MaxOpenConnection:1, UseDummy:false, EnableGoogleMLIntegration:false, SchemaValidationMode:""}, failed to reload last live sources: 
+Errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
