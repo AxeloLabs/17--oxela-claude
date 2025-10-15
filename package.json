@@ -3,12 +3,21 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "health:titanic": "bash ./scripts/titanic-health-check.sh",
     "dev": "turbo run dev",
     "build": "turbo run build",
     "lint": "turbo run lint",
     "clean": "turbo run clean",
     "gen": "firebase dataconnect:sdk:generate",
-    "emu": "firebase emulators:start --only auth,dataconnect"
+    "emu": "firebase emulators:start --only auth,dataconnect",
+    "build:vitrine": "cd apps/vitrine && pnpm build",
+    "build:dashboard": "cd apps/dashboard && pnpm build",
+    "build:admin": "cd apps/admin && pnpm build",
+    "deploy": "pnpm build && firebase deploy",
+    "deploy:hosting-static:vitrine": "pnpm build:vitrine && firebase deploy --only hosting:mon-projet-vitrine",
+    "deploy:hosting-static:dashboard": "pnpm build:dashboard && firebase deploy --only hosting:mon-projet-dashboard",
+    "deploy:hosting-static:admin": "pnpm build:admin && firebase deploy --only hosting:mon-projet-admin",
+    "deploy:dataconnect": "firebase deploy --only dataconnect"
   },
   "devDependencies": {
     "turbo": "^2.0.0",

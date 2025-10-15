@@ -20,3 +20,16 @@ Schema: sources: schema/schema.gql [2747B]
 Connector "ecommerce": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
 I1012 21:15:18.566485    6944 service.go:147] [/emulator/oxela-auth-service 6814] while configuring to server.Settings{ConnectionString:"dbname='oxela-auth-database' host='127.0.0.1' port='5432' sslmode='disable' dbname='oxela-auth-database'", MaxOpenConnection:1, UseDummy:false, EnableGoogleMLIntegration:false, SchemaValidationMode:""}, failed to reload last live sources: 
 Errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+I1012 21:19:26.259210    6944 load.go:31] Reloading schema and connectors...
+I1012 21:19:26.333223    6944 codegen.go:82] [connector "ecommerce" javascriptSdk] Generating sources into "/Users/ax/1-VS/0--proj/17--oxela-claude/packages/firebase/src/generated"
+I1012 21:19:26.379744    6944 codegen.go:82] [connector "ecommerce" javascriptSdk] Generating sources into "/Users/ax/1-VS/0--proj/17--oxela-claude/src/dataconnect-generated"
+I1012 21:19:26.406397    6944 collector.go:107] schema extensions wrote into "/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect/.dataconnect/schema"
+Generated sources: prelude.gql [73251B] main/input.gql [98909B] main/relation.gql [43878B] main/query.gql [8782B] main/mutation.gql [23630B] 
+I1012 21:19:26.411782    6944 collector.go:107] connector "ecommerce" javascriptSdk wrote into "/Users/ax/1-VS/0--proj/17--oxela-claude/packages/firebase/src/generated"
+Generated sources: react/esm/package.json [17B] react/index.cjs.js [13155B] index.d.ts [33857B] esm/package.json [17B] index.cjs.js [16549B] react/index.d.ts [16086B] react/package.json [460B] react/esm/index.esm.js [12441B] react/README.md [163607B] esm/index.esm.js [14445B] package.json [863B] README.md [158454B] 
+I1012 21:19:26.416597    6944 installsdk.go:86] Running command: /opt/homebrew/bin/npm install file:src/generated
+E1012 21:19:27.904892    6944 installsdk.go:88] Failed to install package: exit status 1
+I1012 21:19:27.908633    6944 collector.go:107] connector "ecommerce" javascriptSdk wrote into "/Users/ax/1-VS/0--proj/17--oxela-claude/src/dataconnect-generated"
+Generated sources: index.cjs.js [16549B] package.json [639B] README.md [159681B] index.d.ts [33857B] esm/index.esm.js [14445B] esm/package.json [17B] 
+I1012 21:19:27.910768    6944 installsdk.go:86] Running command: /opt/homebrew/bin/pnpm link ./src/dataconnect-generated
+I1012 21:19:47.568249    6944 load.go:109] Finished reloading
