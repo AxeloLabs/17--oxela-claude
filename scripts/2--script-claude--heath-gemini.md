@@ -1,17 +1,19 @@
 DÉBUT initialisation
-  - Capturer timestamp de début (format ISO 8601)
-  - Créer variable globale STATUS = "OK"
-  - Initialiser structure de données pour stocker résultats :
-    * config_results = {}
-    * git_results = {}
-    * build_results = {}
-    * test_results = {}
-    * emulator_results = {}
-    * deploy_results = {}
-  - Détecter la racine du projet (remonter jusqu'à trouver turbo.json ou package.json avec workspaces)
-  - Créer répertoire de sortie si inexistant : /apps/admin/reports/ ou /superdev/reports/
-  - Initialiser fichier de log temporaire : /tmp/titanic-health-TIMESTAMP.log
-FIN initialisation
+
+- Capturer timestamp de début (format ISO 8601)
+- Créer variable globale STATUS = "OK"
+- Initialiser structure de données pour stocker résultats :
+  - config_results = {}
+  - git_results = {}
+  - build_results = {}
+  - test_results = {}
+  - emulator_results = {}
+  - deploy_results = {}
+- Détecter la racine du projet (remonter jusqu'à trouver turbo.json ou package.json avec workspaces)
+- Créer répertoire de sortie si inexistant : /apps/admin/reports/ ou /superdev/reports/
+- Initialiser fichier de log temporaire : /tmp/titanic-health-TIMESTAMP.log
+  FIN initialisation
+
 ```
 
 **Commandes à exécuter** :
@@ -32,32 +34,38 @@ FIN initialisation
 
 **Pseudo-code** :
 ```
+
 DÉBUT détection_config
-  - Rechercher dans la racine du projet :
-    * firebase.json (obligatoire)
-    * .firebaserc (obligatoire)
-    * firestore.rules
-    * firestore.indexes.json
-    * storage.rules
-    * database.rules.json
-  
-  - Rechercher dans apps/admin/, apps/dashboard/, apps/public/ :
-    * .env
-    * .env.local
-    * .env.production
-    * next.config.js ou vite.config.js (selon framework)
-    * firebase-config.ts ou firebaseConfig.js
-  
-  - Rechercher dans packages/ :
-    * Tout fichier contenant "firebase" dans son nom
-    * Fichiers de configuration partagés
-  
-  - Pour chaque fichier trouvé :
-    * Enregistrer chemin absolu
-    * Vérifier lisibilité (permissions)
-    * Capturer date de dernière modification
-    * Marquer comme TROUVÉ ou MANQUANT
-FIN détection_config
+
+- Rechercher dans la racine du projet :
+
+  - firebase.json (obligatoire)
+  - .firebaserc (obligatoire)
+  - firestore.rules
+  - firestore.indexes.json
+  - storage.rules
+  - database.rules.json
+
+- Rechercher dans apps/admin/, apps/dashboard/, apps/public/ :
+
+  - .env
+  - .env.local
+  - .env.production
+  - next.config.js ou vite.config.js (selon framework)
+  - firebase-config.ts ou firebaseConfig.js
+
+- Rechercher dans packages/ :
+
+  - Tout fichier contenant "firebase" dans son nom
+  - Fichiers de configuration partagés
+
+- Pour chaque fichier trouvé :
+  _ Enregistrer chemin absolu
+  _ Vérifier lisibilité (permissions)
+  _ Capturer date de dernière modification
+  _ Marquer comme TROUVÉ ou MANQUANT
+  FIN détection_config
+
 ```
 
 **Commandes à exécuter** :
@@ -68,33 +76,41 @@ FIN détection_config
 
 **Format de résultat dans rapport** :
 ```
+
 Tableau : Fichiers de configuration Firebase
 | Fichier | Chemin | Statut | Dernière modification |
+
 ```
 
 #### 1.2 Extraction des environnements et clés
 
 **Pseudo-code** :
 ```
+
 DÉBUT extraction_environnements
-  - Parser .firebaserc (format JSON) :
-    * Extraire tous les alias de projets (projects.*)
-    * Identifier le projet par défaut (projects.default)
-    * Lister tous les projectId configurés
-  
-  - Parser firebase.json :
-    * Extraire projectId si présent
-    * Lister services configurés (hosting, functions, firestore, storage, etc.)
-    * Pour chaque service, extraire configuration clé
-  
-  - Scanner tous les fichiers .env* :
-    * Extraire toutes variables commençant par FIREBASE_, NEXT_PUBLIC_FIREBASE_, VITE_FIREBASE_
-    * Extraire apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId
-    * Masquer les valeurs sensibles (afficher seulement premiers/derniers 4 caractères)
-    * Identifier l'environnement (production, staging, dev selon nom fichier)
-  
-  - Créer matrice environnements × clés détectées
-FIN extraction_environnements
+
+- Parser .firebaserc (format JSON) :
+
+  - Extraire tous les alias de projets (projects.\*)
+  - Identifier le projet par défaut (projects.default)
+  - Lister tous les projectId configurés
+
+- Parser firebase.json :
+
+  - Extraire projectId si présent
+  - Lister services configurés (hosting, functions, firestore, storage, etc.)
+  - Pour chaque service, extraire configuration clé
+
+- Scanner tous les fichiers .env\* :
+
+  - Extraire toutes variables commençant par FIREBASE*, NEXT_PUBLIC_FIREBASE*, VITE*FIREBASE*
+  - Extraire apiKey, authDomain, projectId, storageBucket, messagingSenderId, appId
+  - Masquer les valeurs sensibles (afficher seulement premiers/derniers 4 caractères)
+  - Identifier l'environnement (production, staging, dev selon nom fichier)
+
+- Créer matrice environnements × clés détectées
+  FIN extraction_environnements
+
 ```
 
 **Commandes à exécuter** :
@@ -105,42 +121,50 @@ FIN extraction_environnements
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Environnements détectés
+
 - Projet par défaut : [projectId]
 - Projets configurés : [liste]
 
 Tableau : Clés Firebase par application
 | Application | Environnement | apiKey | projectId | authDomain | Statut |
-(avec valeurs masquées : AIza***xy89)
+(avec valeurs masquées : AIza\*\*\*xy89)
+
 ```
 
 #### 1.3 Vérification de cohérence
 
 **Pseudo-code** :
 ```
+
 DÉBUT verification_coherence
-  - Extraire projectId de .firebaserc (default)
-  - Extraire projectId de firebase.json si présent
-  - Pour chaque .env trouvé :
-    * Extraire FIREBASE_PROJECT_ID ou équivalent
-    * Comparer avec projectId de référence
-  
-  - Créer liste de divergences :
-    * Si projectId diffère entre .firebaserc et firebase.json → WARNING
-    * Si projectId diffère entre environnements → WARNING
-    * Si projectId contient "demo-" ou "test-" en production → WARNING
-  
-  - Vérifier présence obligatoire :
-    * Si firebase.json manquant → ERROR, STATUS = "ERROR"
-    * Si .firebaserc manquant → ERROR, STATUS = "ERROR"
-    * Si aucune apiKey détectée → WARNING
-    * Si authDomain ne correspond pas au pattern [projectId].firebaseapp.com → WARNING
-  
-  - Pour chaque service dans firebase.json :
-    * Vérifier présence fichiers règles correspondants
-    * Ex : si firestore configuré, vérifier firestore.rules existe
-    * Si fichier manquant → WARNING
-FIN verification_coherence
+
+- Extraire projectId de .firebaserc (default)
+- Extraire projectId de firebase.json si présent
+- Pour chaque .env trouvé :
+
+  - Extraire FIREBASE_PROJECT_ID ou équivalent
+  - Comparer avec projectId de référence
+
+- Créer liste de divergences :
+
+  - Si projectId diffère entre .firebaserc et firebase.json → WARNING
+  - Si projectId diffère entre environnements → WARNING
+  - Si projectId contient "demo-" ou "test-" en production → WARNING
+
+- Vérifier présence obligatoire :
+
+  - Si firebase.json manquant → ERROR, STATUS = "ERROR"
+  - Si .firebaserc manquant → ERROR, STATUS = "ERROR"
+  - Si aucune apiKey détectée → WARNING
+  - Si authDomain ne correspond pas au pattern [projectId].firebaseapp.com → WARNING
+
+- Pour chaque service dans firebase.json :
+  _ Vérifier présence fichiers règles correspondants
+  _ Ex : si firestore configuré, vérifier firestore.rules existe \* Si fichier manquant → WARNING
+  FIN verification_coherence
+
 ```
 
 **Commandes à exécuter** :
@@ -150,30 +174,35 @@ FIN verification_coherence
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Cohérence de configuration
 ✓ projectId cohérent entre tous les environnements
 ⚠ Warning : authDomain de dashboard ne suit pas le pattern standard
 ✗ Error : firebase.json manquant
 
 Liste des divergences :
+
 - .firebaserc : my-project-prod
 - apps/admin/.env : my-project-prod
 - apps/dashboard/.env.local : my-project-dev (DIVERGENCE)
+
 ```
 
 **Appel à Gemini si erreurs critiques** :
 ```
+
 SI firebase.json OU .firebaserc manquant ALORS
-  Proposer à l'utilisateur :
-  "Configuration Firebase incomplète détectée. Voulez-vous que Gemini génère les fichiers manquants ? (y/n)"
-  
-  SI utilisateur accepte ALORS
-    Envoyer à Gemini :
-    "Generate missing Firebase configuration files for a Turborepo project with 3 apps (admin, dashboard, public). 
-    Project structure detected: [liste des apps trouvées].
-    Create firebase.json with hosting configuration for all apps and .firebaserc with default project alias.
-    Use placeholder project ID 'my-firebase-project'."
+Proposer à l'utilisateur :
+"Configuration Firebase incomplète détectée. Voulez-vous que Gemini génère les fichiers manquants ? (y/n)"
+
+SI utilisateur accepte ALORS
+Envoyer à Gemini :
+"Generate missing Firebase configuration files for a Turborepo project with 3 apps (admin, dashboard, public).
+Project structure detected: [liste des apps trouvées].
+Create firebase.json with hosting configuration for all apps and .firebaserc with default project alias.
+Use placeholder project ID 'my-firebase-project'."
 FIN SI
+
 ```
 
 ---
@@ -186,26 +215,32 @@ FIN SI
 
 **Pseudo-code** :
 ```
+
 DÉBUT verification_git_status
-  - Vérifier présence dépôt Git :
-    * Chercher répertoire .git à la racine
-    * Si absent → WARNING et passer à phase suivante
-  
-  - Exécuter équivalent de "git status --porcelain" :
-    * Capturer sortie complète
-    * Compter lignes commençant par "M " (modified)
-    * Compter lignes commençant par "??" (untracked)
-    * Compter lignes commençant par "A " (added)
-    * Compter lignes commençant par "D " (deleted)
-    * Compter lignes commençant par "UU" ou "AA" (conflits)
-  
-  - Évaluer propreté :
-    * Si aucun fichier modifié/untracked → git_status = "CLEAN"
-    * Si fichiers modifiés mais pas de conflit → git_status = "DIRTY"
-    * Si conflits présents → git_status = "CONFLICT", STATUS global = "ERROR"
-  
-  - Lister fichiers non commités (max 20 premiers)
-FIN verification_git_status
+
+- Vérifier présence dépôt Git :
+
+  - Chercher répertoire .git à la racine
+  - Si absent → WARNING et passer à phase suivante
+
+- Exécuter équivalent de "git status --porcelain" :
+
+  - Capturer sortie complète
+  - Compter lignes commençant par "M " (modified)
+  - Compter lignes commençant par "??" (untracked)
+  - Compter lignes commençant par "A " (added)
+  - Compter lignes commençant par "D " (deleted)
+  - Compter lignes commençant par "UU" ou "AA" (conflits)
+
+- Évaluer propreté :
+
+  - Si aucun fichier modifié/untracked → git_status = "CLEAN"
+  - Si fichiers modifiés mais pas de conflit → git_status = "DIRTY"
+  - Si conflits présents → git_status = "CONFLICT", STATUS global = "ERROR"
+
+- Lister fichiers non commités (max 20 premiers)
+  FIN verification_git_status
+
 ```
 
 **Commandes à exécuter** :
@@ -216,38 +251,46 @@ FIN verification_git_status
 
 **Format de résultat dans rapport** :
 ```
+
 Section : État Git
 Statut : CLEAN / DIRTY / CONFLICT
+
 - Fichiers modifiés : 12
 - Fichiers non suivis : 3
 - Fichiers en conflit : 0
 - Fichiers supprimés : 1
 
 Liste des fichiers non commités (max 20) :
-M  apps/admin/src/components/Header.tsx
-M  apps/dashboard/package.json
+M apps/admin/src/components/Header.tsx
+M apps/dashboard/package.json
 ?? apps/public/temp-file.js
+
 ```
 
 #### 1.5.2 Historique des commits récents
 
 **Pseudo-code** :
 ```
+
 DÉBUT historique_commits
-  - Exécuter équivalent de "git log -5 --pretty=format" :
-    * Capturer hash court (7 caractères)
-    * Capturer date au format "YYYY-MM-DD HH:MM"
-    * Capturer nom auteur
-    * Capturer message commit (première ligne)
-  
-  - Pour chaque commit :
-    * Enregistrer dans tableau structuré
-    * Calculer ancienneté (différence avec timestamp actuel)
-  
-  - Identifier dernier commit :
-    * Date du dernier commit
-    * Calculer si > 7 jours → WARNING "Projet potentiellement inactif"
-FIN historique_commits
+
+- Exécuter équivalent de "git log -5 --pretty=format" :
+
+  - Capturer hash court (7 caractères)
+  - Capturer date au format "YYYY-MM-DD HH:MM"
+  - Capturer nom auteur
+  - Capturer message commit (première ligne)
+
+- Pour chaque commit :
+
+  - Enregistrer dans tableau structuré
+  - Calculer ancienneté (différence avec timestamp actuel)
+
+- Identifier dernier commit :
+  _ Date du dernier commit
+  _ Calculer si > 7 jours → WARNING "Projet potentiellement inactif"
+  FIN historique_commits
+
 ```
 
 **Commandes à exécuter** :
@@ -257,6 +300,7 @@ FIN historique_commits
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Historique récent (5 derniers commits)
 Tableau :
 | Hash | Date | Auteur | Message |
@@ -265,19 +309,23 @@ Tableau :
 | ... | ... | ... | ... |
 
 ⚠ Dernier commit il y a 12 jours (inactivité détectée)
+
 ```
 
 #### 1.5.3 Informations de branche
 
 **Pseudo-code** :
 ```
+
 DÉBUT info_branche
-  - Détecter branche courante (git branch --show-current)
-  - Lister toutes les branches locales
-  - Si branche courante != main ET != master → INFO
-  - Compter commits en avance/retard par rapport à origin (si configuré)
-  - Vérifier si remote configuré (git remote -v)
-FIN info_branche
+
+- Détecter branche courante (git branch --show-current)
+- Lister toutes les branches locales
+- Si branche courante != main ET != master → INFO
+- Compter commits en avance/retard par rapport à origin (si configuré)
+- Vérifier si remote configuré (git remote -v)
+  FIN info_branche
+
 ```
 
 **Commandes à exécuter** :
@@ -287,24 +335,28 @@ FIN info_branche
 
 **Format de résultat dans rapport** :
 ```
+
 Branche courante : feature/new-dashboard
 Branches locales : main, develop, feature/new-dashboard
 Remote : origin (https://github.com/user/repo.git)
 État : 3 commits en avance sur origin/feature/new-dashboard
+
 ```
 
 **Appel à Gemini si conflits détectés** :
 ```
+
 SI git_status == "CONFLICT" ALORS
-  Afficher message :
-  "⚠️ CONFLITS GIT DÉTECTÉS - Résolution manuelle requise avant de continuer.
-  Fichiers en conflit : [liste]
-  
-  Gemini ne peut pas résoudre automatiquement les conflits de merge.
-  Veuillez résoudre manuellement avec 'git status' et 'git mergetool'."
-  
-  Arrêter l'exécution du script avec code sortie 1
+Afficher message :
+"⚠️ CONFLITS GIT DÉTECTÉS - Résolution manuelle requise avant de continuer.
+Fichiers en conflit : [liste]
+
+Gemini ne peut pas résoudre automatiquement les conflits de merge.
+Veuillez résoudre manuellement avec 'git status' et 'git mergetool'."
+
+Arrêter l'exécution du script avec code sortie 1
 FIN SI
+
 ```
 
 ---
@@ -317,22 +369,27 @@ FIN SI
 
 **Pseudo-code** :
 ```
+
 DÉBUT detection_turborepo
-  - Vérifier présence turbo.json à la racine
-  - Parser turbo.json pour identifier pipeline de build :
-    * Extraire tasks "build", "lint", "type-check"
-    * Identifier dépendances entre tasks
-  
-  - Lire package.json racine :
-    * Vérifier présence de "workspaces"
-    * Lister tous les workspaces (apps/*, packages/*)
-  
-  - Pour chaque app (admin, dashboard, public) :
-    * Vérifier présence de package.json
-    * Identifier script "build" dans package.json
-    * Identifier framework (Next.js, Vite, CRA) via dependencies
-    * Enregistrer commande de build spécifique
-FIN detection_turborepo
+
+- Vérifier présence turbo.json à la racine
+- Parser turbo.json pour identifier pipeline de build :
+
+  - Extraire tasks "build", "lint", "type-check"
+  - Identifier dépendances entre tasks
+
+- Lire package.json racine :
+
+  - Vérifier présence de "workspaces"
+  - Lister tous les workspaces (apps/_, packages/_)
+
+- Pour chaque app (admin, dashboard, public) :
+  _ Vérifier présence de package.json
+  _ Identifier script "build" dans package.json
+  _ Identifier framework (Next.js, Vite, CRA) via dependencies
+  _ Enregistrer commande de build spécifique
+  FIN detection_turborepo
+
 ```
 
 **Commandes à exécuter** :
@@ -343,52 +400,56 @@ FIN detection_turborepo
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Configuration Build
 Turborepo détecté : ✓
 Workspaces : 3 apps, 5 packages
 
 Applications détectées :
+
 - admin (Next.js) : npm run build --filter=admin
 - dashboard (Vite) : npm run build --filter=dashboard
 - public (Next.js) : npm run build --filter=public
+
 ```
 
 #### 2.2 Build des applications (séquentiel)
 
 **Pseudo-code** :
 ```
+
 POUR CHAQUE app IN [admin, dashboard, public] FAIRE
-  DÉBUT build_app
-    - Afficher message : "Building [app]..."
-    - Capturer timestamp début build
-    
+DÉBUT build_app - Afficher message : "Building [app]..." - Capturer timestamp début build
+
     - Exécuter commande : turbo run build --filter=[app]
       OU : npm run build --workspace=apps/[app]
       * Rediriger stdout vers fichier temporaire : /tmp/build-[app].log
       * Rediriger stderr vers même fichier
       * Capturer code de sortie
-    
+
     - Capturer timestamp fin build
     - Calculer durée : fin - début
-    
+
     - Analyser fichier log :
       * Compter occurrences de "error" (case insensitive) → nombre_erreurs
       * Compter occurrences de "warning" (case insensitive) → nombre_warnings
       * Extraire dernières 50 lignes pour inclusion dans rapport
-    
+
     - Évaluer résultat :
       * Si code sortie == 0 ET nombre_erreurs == 0 → build_status = "SUCCESS"
       * Si code sortie == 0 ET nombre_erreurs > 0 → build_status = "SUCCESS_WITH_WARNINGS"
       * Si code sortie != 0 → build_status = "FAILED", STATUS global = "ERROR"
-    
+
     - Enregistrer dans build_results[app] :
       * status : build_status
       * duration : durée en secondes
       * errors : nombre_erreurs
       * warnings : nombre_warnings
       * log_path : chemin du fichier log
-  FIN build_app
+
+FIN build_app
 FIN POUR
+
 ```
 
 **Commandes à exécuter** :
@@ -399,6 +460,7 @@ FIN POUR
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Build des applications
 
 Tableau récapitulatif :
@@ -409,78 +471,87 @@ Tableau récapitulatif :
 
 Détails dashboard (FAILED) :
 [Afficher extrait du log avec les 5 premières erreurs]
+
 ```
 
 **Appel à Gemini si build échoue** :
 ```
+
 SI build_status == "FAILED" POUR n'importe quelle app ALORS
-  Proposer à l'utilisateur :
-  "❌ Build de [app] a échoué avec [X] erreurs.
-  
-  Voulez-vous que Gemini analyse et corrige automatiquement les erreurs ? (y/n)
-  
-  Les erreurs seront envoyées à Gemini avec le contexte du projet."
-  
-  SI utilisateur accepte ALORS
-    - Extraire les 20 premières lignes contenant "error" du log
-    - Identifier les fichiers sources mentionnés dans les erreurs
-    
+Proposer à l'utilisateur :
+"❌ Build de [app] a échoué avec [X] erreurs.
+
+Voulez-vous que Gemini analyse et corrige automatiquement les erreurs ? (y/n)
+
+Les erreurs seront envoyées à Gemini avec le contexte du projet."
+
+SI utilisateur accepte ALORS - Extraire les 20 premières lignes contenant "error" du log - Identifier les fichiers sources mentionnés dans les erreurs
+
     Envoyer à Gemini :
     "Fix the following build errors in the [app] application of a Turborepo project.
-    
+
     Build command used: turbo run build --filter=[app]
     Framework detected: [Next.js/Vite/etc]
-    
+
     Build errors:
     [Coller extrait du log avec erreurs]
-    
+
     Analyze the errors, identify the root causes, and provide:
     1. Exact file paths that need modification
     2. Code changes needed (as diffs or complete file content)
     3. Explanation of what caused each error
-    
+
     Context: This is part of an automated health check script."
-    
+
     - Attendre réponse Gemini
     - Afficher réponse à l'utilisateur
     - Proposer d'appliquer les corrections automatiquement
-  FIN SI
+
 FIN SI
+FIN SI
+
 ```
 
 #### 2.3 Linting global
 
 **Pseudo-code** :
 ```
+
 DÉBUT linting_global
-  - Vérifier présence d'ESLint :
-    * Chercher .eslintrc.* ou eslint.config.js à la racine
-    * Vérifier script "lint" dans package.json racine
-  
-  - SI ESLint configuré ALORS
-    - Exécuter : turbo run lint
-      OU : npm run lint
-      * Rediriger vers /tmp/lint.log
-      * Capturer code de sortie
-    
-    - Analyser log :
-      * Extraire nombre de fichiers vérifiés (parsing sortie ESLint)
-      * Compter problèmes par sévérité :
-        - Errors (rouge)
-        - Warnings (jaune)
-      * Extraire règles les plus violées (top 5)
-    
-    - Évaluer :
-      * Si code sortie == 0 → lint_status = "PASSED"
-      * Si warnings > 0 mais errors == 0 → lint_status = "WARNINGS", STATUS global = "WARNING"
-      * Si errors > 0 → lint_status = "FAILED", STATUS global = "ERROR"
-  
-  SINON
-    lint_status = "NOT_CONFIGURED"
-  FIN SI
-  
-  - Enregistrer dans build_results.lint
-FIN linting_global
+
+- Vérifier présence d'ESLint :
+
+  - Chercher .eslintrc.\* ou eslint.config.js à la racine
+  - Vérifier script "lint" dans package.json racine
+
+- SI ESLint configuré ALORS
+
+  - Exécuter : turbo run lint
+    OU : npm run lint
+
+    - Rediriger vers /tmp/lint.log
+    - Capturer code de sortie
+
+  - Analyser log :
+
+    - Extraire nombre de fichiers vérifiés (parsing sortie ESLint)
+    - Compter problèmes par sévérité :
+      - Errors (rouge)
+      - Warnings (jaune)
+    - Extraire règles les plus violées (top 5)
+
+  - Évaluer :
+    - Si code sortie == 0 → lint_status = "PASSED"
+    - Si warnings > 0 mais errors == 0 → lint_status = "WARNINGS", STATUS global = "WARNING"
+    - Si errors > 0 → lint_status = "FAILED", STATUS global = "ERROR"
+
+SINON
+lint_status = "NOT_CONFIGURED"
+FIN SI
+
+- Enregistrer dans build_results.lint
+  FIN linting_global
+
 ```
 
 **Commandes à exécuter** :
@@ -491,6 +562,7 @@ FIN linting_global
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Linting (ESLint)
 Statut : WARNINGS
 Fichiers vérifiés : 247
@@ -498,35 +570,40 @@ Erreurs : 0
 Warnings : 15
 
 Règles les plus violées :
+
 1. @typescript-eslint/no-explicit-any (8 occurrences)
 2. react-hooks/exhaustive-deps (4 occurrences)
 3. no-console (3 occurrences)
 
 [Bouton : Voir log complet]
+
 ```
 
 **Appel à Gemini si linting échoue avec erreurs** :
 ```
+
 SI lint_status == "FAILED" ALORS
-  Proposer :
-  "⚠️ Linting a détecté [X] erreurs critiques.
-  
-  Gemini peut analyser et suggérer des corrections. Continuer ? (y/n)"
-  
-  SI accepté ALORS
-    Envoyer à Gemini :
-    "Fix ESLint errors in Turborepo project.
-    
+Proposer :
+"⚠️ Linting a détecté [X] erreurs critiques.
+
+Gemini peut analyser et suggérer des corrections. Continuer ? (y/n)"
+
+SI accepté ALORS
+Envoyer à Gemini :
+"Fix ESLint errors in Turborepo project.
+
     Lint output:
     [Extrait avec les 30 premières erreurs du log]
-    
+
     For each error:
     1. Identify file and line number
     2. Explain the rule violation
     3. Provide fixed code snippet
-    
+
     Focus on errors only, ignore warnings for now."
+
 FIN SI
+
 ```
 
 ---
@@ -539,26 +616,29 @@ FIN SI
 
 **Pseudo-code** :
 ```
+
 DÉBUT detection_test_frameworks
-  - Scanner package.json de toutes les apps et packages :
-    * Chercher dans devDependencies :
-      - jest, @types/jest → jest_detected = true
-      - vitest → vitest_detected = true
-      - @playwright/test → playwright_detected = true
-      - cypress → cypress_detected = true
-    
-  - Pour chaque framework détecté :
-    * Identifier fichiers de configuration (jest.config.js, vitest.config.ts, etc.)
-    * Identifier script de test dans package.json ("test", "test:unit", "test:e2e")
-  
-  - Scanner structure fichiers de test :
-    * Chercher fichiers *.test.ts, *.test.tsx, *.spec.ts, *.spec.tsx
-    * Chercher fichiers dans répertoires __tests__/, tests/, e2e/
-    * Compter nombre total de fichiers de test
-  
-  - Créer matrice :
-    * [app/package] × [framework] × [nombre de fichiers]
-FIN detection_test_frameworks
+
+- Scanner package.json de toutes les apps et packages :
+  - Chercher dans devDependencies :
+    - jest, @types/jest → jest_detected = true
+    - vitest → vitest_detected = true
+    - @playwright/test → playwright_detected = true
+    - cypress → cypress_detected = true
+- Pour chaque framework détecté :
+
+  - Identifier fichiers de configuration (jest.config.js, vitest.config.ts, etc.)
+  - Identifier script de test dans package.json ("test", "test:unit", "test:e2e")
+
+- Scanner structure fichiers de test :
+
+  - Chercher fichiers _.test.ts, _.test.tsx, _.spec.ts, _.spec.tsx
+  - Chercher fichiers dans répertoires **tests**/, tests/, e2e/
+  - Compter nombre total de fichiers de test
+
+- Créer matrice : \* [app/package] × [framework] × [nombre de fichiers]
+  FIN detection_test_frameworks
+
 ```
 
 **Commandes à exécuter** :
@@ -568,46 +648,53 @@ FIN detection_test_frameworks
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Frameworks de test détectés
+
 - Jest : ✓ (apps/admin, apps/dashboard, packages/shared)
 - Vitest : ✓ (apps/public)
 - Playwright : ✓ (apps/admin - E2E)
 - Cypress : ✗
 
 Fichiers de test : 89 fichiers
+
 - Unit tests : 67
 - Integration tests : 15
 - E2E tests : 7
+
 ```
 
 #### 3.2 Inventaire des tests par fichier
 
 **Pseudo-code** :
 ```
+
 DÉBUT inventaire_tests
-  - Pour chaque fichier de test trouvé :
-    * Lire contenu du fichier
-    * Parser pour identifier blocs :
-      - describe('...') ou suite('...')
-      - test('...') ou it('...')
-    * Construire arborescence :
-      fichier
-        → describe 1
-            → test 1.1
-            → test 1.2
-        → describe 2
-            → test 2.1
-    
-    * Compter :
-      - Nombre de describe/suite par fichier
-      - Nombre de test/it par fichier
-      - Tests avec .skip ou .todo → marquer comme SKIPPED
-  
-  - Calculer statistiques globales :
-    * Total de suites
-    * Total de tests
-    * Tests actifs vs skipped
-FIN inventaire_tests
+
+- Pour chaque fichier de test trouvé :
+
+  - Lire contenu du fichier
+  - Parser pour identifier blocs :
+    - describe('...') ou suite('...')
+    - test('...') ou it('...')
+  - Construire arborescence :
+    fichier
+    → describe 1
+    → test 1.1
+    → test 1.2
+    → describe 2
+    → test 2.1
+
+  - Compter :
+    - Nombre de describe/suite par fichier
+    - Nombre de test/it par fichier
+    - Tests avec .skip ou .todo → marquer comme SKIPPED
+
+- Calculer statistiques globales :
+  _ Total de suites
+  _ Total de tests \* Tests actifs vs skipped
+  FIN inventaire_tests
+
 ```
 
 **Commandes à exécuter** :
@@ -617,6 +704,7 @@ FIN inventaire_tests
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Inventaire des tests
 
 Tableau par fichier (top 10 par nombre de tests) :
@@ -626,19 +714,19 @@ Tableau par fichier (top 10 par nombre de tests) :
 | ... | ... | ... | ... |
 
 Total : 247 tests (225 actifs, 22 skipped) dans 34 suites
+
 ```
 
 #### 3.3 Exécution des tests
 
 **Pseudo-code** :
 ```
+
 POUR CHAQUE framework détecté FAIRE
-  DÉBUT execution_tests
-    - Identifier commande de test appropriée :
-      * Jest : turbo run test --filter=[workspace] -- --json --outputFile=/tmp/jest-results.json
-      * Vitest : vitest run --reporter=json --outputFile=/tmp/vitest-results.json
-      * Playwright : playwright test --reporter=json
-    
+DÉBUT execution_tests - Identifier commande de test appropriée :
+_ Jest : turbo run test --filter=[workspace] -- --json --outputFile=/tmp/jest-results.json
+_ Vitest : vitest run --reporter=json --outputFile=/tmp/vitest-results.json \* Playwright : playwright test --reporter=json
+
     - Capturer timestamp début
     - Exécuter commande de test :
       * Rediriger stdout vers /tmp/test-[framework]-output.log
@@ -646,7 +734,7 @@ POUR CHAQUE framework détecté FAIRE
       * Capturer code de sortie
     - Capturer timestamp fin
     - Calculer durée totale
-    
+
     - Parser résultats JSON (si disponible) :
       * Nombre total de tests exécutés
       * Nombre de tests passés (success)
@@ -655,31 +743,33 @@ POUR CHAQUE framework détecté FAIRE
       * Durée d'exécution de chaque test
       * Calculer durée moyenne
       * Identifier tests les plus lents (top 5)
-    
+
     - SI pas de JSON, parser sortie texte :
       * Chercher patterns "X passed", "Y failed", "Z tests"
       * Extraire avec regex
-    
+
     - Pour chaque test échoué :
       * Extraire nom du test
       * Extraire message d'erreur
       * Extraire stack trace (10 premières lignes)
       * Identifier fichier et ligne
-    
+
     - Évaluer :
       * Si tous tests passés → test_status = "PASSED"
       * Si tests échoués > 0 → test_status = "FAILED", STATUS global = "ERROR"
       * Si aucun test exécuté → test_status = "NO_TESTS", WARNING
-    
+
     - Enregistrer dans test_results[framework]
-  FIN execution_tests
+
+FIN execution_tests
 FIN POUR
 
 - Calculer statistiques globales toutes frameworks :
-  * Total tests exécutés
-  * Taux de réussite (%)
-  * Durée totale d'exécution
-  * Temps moyen par test
+  - Total tests exécutés
+  - Taux de réussite (%)
+  - Durée totale d'exécution
+  - Temps moyen par test
+
 ```
 
 **Commandes à exécuter** :
@@ -690,6 +780,7 @@ FIN POUR
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Résultats des tests
 
 Tableau récapitulatif :
@@ -700,68 +791,63 @@ Tableau récapitulatif :
 | TOTAL | 210 | 205 | 5 | 10 | 88.2s | 97.6% |
 
 Tests échoués (5) :
+
 1. apps/admin - Header component > should render logo
    Erreur : Expected element to have src="/logo.png" but got "/assets/logo.png"
    Fichier : apps/admin/src/components/Header.test.tsx:42
-   
 2. apps/dashboard - Authentication > login with invalid credentials
    Erreur : NetworkError: Failed to fetch
    Fichier : apps/dashboard/src/utils/auth.test.ts:78
    [...]
 
 Tests les plus lents (top 5) :
+
 1. E2E full user journey (12.4s)
 2. Database migration test (5.8s)
 3. Image upload with compression (3.2s)
-[...]
+   [...]
 
 [Section logs détaillés pliable]
 SI test_status == "FAILED" POUR n'importe quel framework ALORS
-  Proposer à l'utilisateur :
-  "❌ [X] test(s) ont échoué.
-  
-  Voulez-vous que Gemini analyse et corrige automatiquement les tests échoués ? (y/n)
-  
-  Gemini analysera les erreurs et proposera des corrections."
-  
-  SI utilisateur accepte ALORS
-    - Pour chaque test échoué (max 10 premiers) :
-      * Extraire contexte complet :
-        - Nom du test
-        - Fichier et ligne
-        - Message d'erreur
-        - Stack trace
-        - Code du test (bloc describe/test complet)
-      
+Proposer à l'utilisateur :
+"❌ [X] test(s) ont échoué.
+
+Voulez-vous que Gemini analyse et corrige automatiquement les tests échoués ? (y/n)
+
+Gemini analysera les erreurs et proposera des corrections."
+
+SI utilisateur accepte ALORS - Pour chaque test échoué (max 10 premiers) : \* Extraire contexte complet : - Nom du test - Fichier et ligne - Message d'erreur - Stack trace - Code du test (bloc describe/test complet)
+
     Envoyer à Gemini :
     "Fix the following failed tests in a Turborepo Firebase project.
-    
+
     Test framework: [Jest/Vitest/Playwright]
     Total failed: [X] tests
-    
+
     Failed tests details:
-    
+
     TEST 1:
     File: [chemin]
     Test name: [nom]
     Error: [message]
     Stack trace:
     [stack trace]
-    
+
     Test code:
+
 ```typescript
     [code du test complet]
 ```
-    
+
     TEST 2:
     [...]
-    
+
     For each failed test:
     1. Analyze the error and identify root cause
     2. Determine if it's a test issue or application code issue
     3. Provide corrected test code OR application code fix
     4. Explain what was wrong and why the fix works
-    
+
     Consider common issues:
     - Async/await problems
     - Mock/stub configuration
@@ -769,11 +855,11 @@ SI test_status == "FAILED" POUR n'importe quel framework ALORS
     - Changed API responses
     - Environment variables
     - Firebase emulator connectivity"
-    
+
     - Attendre réponse Gemini
     - Afficher corrections proposées
     - Demander confirmation avant application
-    
+
     SI utilisateur confirme application ALORS
       Pour chaque correction :
         - Sauvegarder backup du fichier original
@@ -781,8 +867,10 @@ SI test_status == "FAILED" POUR n'importe quel framework ALORS
         - Ré-exécuter le test spécifique
         - Rapporter succès/échec
     FIN SI
-  FIN SI
+
 FIN SI
+FIN SI
+
 ```
 
 ---
@@ -795,36 +883,43 @@ FIN SI
 
 **Pseudo-code** :
 ```
+
 DÉBUT identification_emulateurs
-  - Parser firebase.json section "emulators" :
-    * Extraire configuration pour chaque émulateur :
-      - auth : { host, port }
-      - firestore : { host, port }
-      - functions : { host, port }
-      - storage : { host, port }
-      - hosting : { host, port }
-      - pubsub : { host, port }
-      - database : { host, port }
-      - ui : { enabled, port }
-    
-    * Pour chaque émulateur configuré :
-      - Enregistrer nom
-      - Enregistrer port
-      - Vérifier si port est dans range valide (1024-65535)
-      - Marquer comme CONFIGURÉ
-  
-  - Scanner package.json pour scripts d'émulateurs :
-    * Chercher scripts contenant "emulators" ou "firebase emulators"
-    * Identifier scripts : emulators:start, emulators:export, etc.
-    * Extraire commandes exactes
-  
-  - Vérifier présence de données seed :
-    * Chercher répertoire emulator-data/ ou firebase-export/
-    * Si présent, lister contenu (firestore, auth, storage)
-    * Calculer taille des données seed
-  
-  - Créer inventaire complet des émulateurs
-FIN identification_emulateurs
+
+- Parser firebase.json section "emulators" :
+
+  - Extraire configuration pour chaque émulateur :
+
+    - auth : { host, port }
+    - firestore : { host, port }
+    - functions : { host, port }
+    - storage : { host, port }
+    - hosting : { host, port }
+    - pubsub : { host, port }
+    - database : { host, port }
+    - ui : { enabled, port }
+
+  - Pour chaque émulateur configuré :
+    - Enregistrer nom
+    - Enregistrer port
+    - Vérifier si port est dans range valide (1024-65535)
+    - Marquer comme CONFIGURÉ
+
+- Scanner package.json pour scripts d'émulateurs :
+
+  - Chercher scripts contenant "emulators" ou "firebase emulators"
+  - Identifier scripts : emulators:start, emulators:export, etc.
+  - Extraire commandes exactes
+
+- Vérifier présence de données seed :
+
+  - Chercher répertoire emulator-data/ ou firebase-export/
+  - Si présent, lister contenu (firestore, auth, storage)
+  - Calculer taille des données seed
+
+- Créer inventaire complet des émulateurs
+  FIN identification_emulateurs
+
 ```
 
 **Commandes à exécuter** :
@@ -836,6 +931,7 @@ FIN identification_emulateurs
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Configuration des émulateurs Firebase
 
 Émulateurs configurés :
@@ -849,89 +945,94 @@ Tableau :
 | UI | 4000 | ✓ Configuré | ✓ Libre |
 
 Scripts package.json :
+
 - emulators:start → firebase emulators:start --import=./firebase-export
 - emulators:export → firebase emulators:export ./firebase-export
 
 Données seed détectées :
 ✓ firebase-export/ (156 MB)
-  - Firestore : 1,247 documents
-  - Auth : 45 utilisateurs
-  - Storage : 23 fichiers
+
+- Firestore : 1,247 documents
+- Auth : 45 utilisateurs
+- Storage : 23 fichiers
+
 ```
 
 **Détection de conflits de ports** :
 ```
+
 POUR CHAQUE émulateur configuré FAIRE
-  - Extraire port configuré
-  - Vérifier disponibilité : lsof -i :PORT
-  
-  SI port occupé ALORS
-    - Identifier processus utilisant le port (PID, nom)
-    - Vérifier si c'est Firebase CLI déjà lancé
-    
+
+- Extraire port configuré
+- Vérifier disponibilité : lsof -i :PORT
+
+SI port occupé ALORS - Identifier processus utilisant le port (PID, nom) - Vérifier si c'est Firebase CLI déjà lancé
+
     SI processus == firebase emulators ALORS
       emulator_running_status[émulateur] = "ALREADY_RUNNING"
     SINON
       emulator_running_status[émulateur] = "PORT_CONFLICT"
       STATUS global = "WARNING"
-      
+
       Enregistrer conflit :
         - Port : X
         - Processus : [nom] (PID [Y])
         - Recommandation : "Arrêter processus ou changer port dans firebase.json"
     FIN SI
-  SINON
-    emulator_running_status[émulateur] = "PORT_AVAILABLE"
-  FIN SI
+
+SINON
+emulator_running_status[émulateur] = "PORT_AVAILABLE"
+FIN SI
 FIN POUR
+
 ```
 
 #### 4.2 Démarrage des émulateurs (optionnel)
 
 **Pseudo-code** :
 ```
+
 DÉBUT demarrage_emulateurs
-  Proposer à l'utilisateur :
-  "Voulez-vous démarrer les émulateurs Firebase pour vérifier leur bon fonctionnement ? (y/n)
-  
-  Cette opération peut prendre 30-60 secondes."
-  
-  SI utilisateur accepte ALORS
-    - Vérifier qu'aucun conflit de port n'existe
-    
+Proposer à l'utilisateur :
+"Voulez-vous démarrer les émulateurs Firebase pour vérifier leur bon fonctionnement ? (y/n)
+
+Cette opération peut prendre 30-60 secondes."
+
+SI utilisateur accepte ALORS - Vérifier qu'aucun conflit de port n'existe
+
     SI conflits détectés ALORS
       Afficher : "⚠️ Conflits de ports détectés. Veuillez résoudre avant de démarrer."
       Passer à phase suivante
       RETOUR
     FIN SI
-    
+
     - Capturer timestamp début
     - Identifier commande de démarrage :
       * Depuis package.json script "emulators:start"
       * OU : firebase emulators:start --project=[projectId]
       * Ajouter flags : --only=[liste émulateurs] --import=[chemin seed data si existe]
-    
+
     - Lancer émulateurs en arrière-plan :
       * Exécuter commande avec & pour background
       * Rediriger stdout vers /tmp/emulators-startup.log
       * Rediriger stderr vers même fichier
       * Capturer PID du processus
-    
+
     - Attendre démarrage (polling) :
       POUR i de 1 à 60 (max 60 secondes) FAIRE
         - Attendre 1 seconde
         - Vérifier si Emulator UI répond (curl http://localhost:4000)
-        
+
         SI réponse 200 ALORS
           emulators_started = true
           SORTIR de la boucle
         FIN SI
       FIN POUR
-    
+
     - SI emulators_started == false ALORS
       emulators_status = "FAILED_TO_START"
       STATUS global = "ERROR"
-      
+
       - Tuer processus (kill PID)
       - Extraire erreurs du log
       - Enregistrer dans rapport
@@ -939,11 +1040,11 @@ DÉBUT demarrage_emulateurs
       emulators_status = "RUNNING"
       - Capturer timestamp fin (temps de démarrage)
     FIN SI
-    
+
     - Vérifier disponibilité de chaque émulateur :
       POUR CHAQUE émulateur configuré FAIRE
         - Tenter connexion HTTP : curl http://localhost:[PORT]
-        
+
         SI réponse ALORS
           emulator_health[émulateur] = "HEALTHY"
         SINON
@@ -951,7 +1052,7 @@ DÉBUT demarrage_emulateurs
           STATUS global = "WARNING"
         FIN SI
       FIN POUR
-    
+
     - Capturer logs de démarrage :
       * Lire /tmp/emulators-startup.log
       * Extraire lignes importantes :
@@ -959,15 +1060,17 @@ DÉBUT demarrage_emulateurs
         - Messages d'erreur ou warnings
         - Ports effectivement utilisés
         - Données importées
-    
+
     - À la fin de l'audit :
       Proposer : "Voulez-vous arrêter les émulateurs ? (y/n)"
       SI oui ALORS kill [PID]
-  SINON
-    emulators_status = "NOT_STARTED"
-    Note : "Démarrage des émulateurs non effectué (choix utilisateur)"
-  FIN SI
+
+SINON
+emulators_status = "NOT_STARTED"
+Note : "Démarrage des émulateurs non effectué (choix utilisateur)"
+FIN SI
 FIN demarrage_emulateurs
+
 ```
 
 **Commandes à exécuter** :
@@ -980,6 +1083,7 @@ FIN demarrage_emulateurs
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Santé des émulateurs
 
 Statut global : RUNNING (démarrage en 23s)
@@ -1004,46 +1108,53 @@ Logs de démarrage (extrait) :
 
 [Lien : Ouvrir Emulator UI - http://localhost:4000]
 [Bouton : Voir logs complets]
+
 ```
 
 **Appel à Gemini si échec de démarrage** :
 ```
+
 SI emulators_status == "FAILED_TO_START" ALORS
-  - Extraire erreurs critiques du log de démarrage
-  - Identifier type d'erreur :
-    * Port déjà utilisé
-    * Configuration invalide
-    * Dépendances manquantes (Java, Node version)
-    * Permissions insuffisantes
-  
-  Proposer :
-  "❌ Échec du démarrage des émulateurs.
-  
-  Voulez-vous que Gemini analyse les logs et propose une solution ? (y/n)"
-  
-  SI accepté ALORS
-    Envoyer à Gemini :
-    "Firebase emulators failed to start in a Turborepo project.
-    
+
+- Extraire erreurs critiques du log de démarrage
+- Identifier type d'erreur :
+  - Port déjà utilisé
+  - Configuration invalide
+  - Dépendances manquantes (Java, Node version)
+  - Permissions insuffisantes
+
+Proposer :
+"❌ Échec du démarrage des émulateurs.
+
+Voulez-vous que Gemini analyse les logs et propose une solution ? (y/n)"
+
+SI accepté ALORS
+Envoyer à Gemini :
+"Firebase emulators failed to start in a Turborepo project.
+
     Firebase configuration:
+
 ```json
     [Contenu firebase.json section emulators]
 ```
-    
+
     Startup logs:
+
 ```
     [Contenu /tmp/emulators-startup.log - 100 dernières lignes]
 ```
-    
+
     Analyze the error and provide:
     1. Root cause identification
     2. Step-by-step fix instructions
     3. If configuration issue, provide corrected firebase.json
     4. If port conflict, suggest alternative ports
     5. If dependency issue, provide installation commands
-    
+
     System: macOS, Node version: [version détectée], Firebase CLI version: [version]"
+
 FIN SI
+
 ```
 
 ---
@@ -1056,48 +1167,52 @@ FIN SI
 
 **Pseudo-code** :
 ```
+
 DÉBUT detection_data_connect
-  - Vérifier dans firebase.json section "dataconnect" :
-    * SI section existe ALORS
-      data_connect_configured = true
-      
-      - Extraire configuration :
-        * source (chemin du schéma)
-        * serviceId
-        * cloudsql.instanceId
-        * cloudsql.database
-      
-      - Vérifier présence du schéma :
-        * Localiser fichier schema.gql ou schema.graphql dans [source]
-        * SI trouvé ALORS
-          - Lire contenu du schéma
-          - Compter nombre de types définis
-          - Compter nombre de queries définis
-          - Compter nombre de mutations définies
-          - Extraire liste des tables/collections principales
-          
-          schema_status = "FOUND"
+
+- Vérifier dans firebase.json section "dataconnect" :
+
+  - SI section existe ALORS
+    data_connect_configured = true
+    - Extraire configuration :
+
+      - source (chemin du schéma)
+      - serviceId
+      - cloudsql.instanceId
+      - cloudsql.database
+
+    - Vérifier présence du schéma :
+
+      - Localiser fichier schema.gql ou schema.graphql dans [source]
+      - SI trouvé ALORS
+        - Lire contenu du schéma
+        - Compter nombre de types définis
+        - Compter nombre de queries définis
+        - Compter nombre de mutations définies
+        - Extraire liste des tables/collections principales
+        schema_status = "FOUND"
         SINON
-          schema_status = "MISSING"
-          STATUS global = "WARNING"
+        schema_status = "MISSING"
+        STATUS global = "WARNING"
         FIN SI
-      
-      - Vérifier configuration GraphQL :
-        * Chercher fichier codegen.yml ou graphql.config.js
-        * Vérifier présence de dossier generated/ ou __generated__/
-        * SI présent ALORS graphql_codegen = "CONFIGURED"
-        * SINON graphql_codegen = "NOT_CONFIGURED"
-      
-      - Vérifier connexion Cloud SQL :
-        * Parser cloudsql.instanceId
-        * Vérifier format : project:region:instance
-        * SI format invalide ALORS WARNING
-    SINON
+
+    - Vérifier configuration GraphQL :
+
+      - Chercher fichier codegen.yml ou graphql.config.js
+      - Vérifier présence de dossier generated/ ou **generated**/
+      - SI présent ALORS graphql_codegen = "CONFIGURED"
+      - SINON graphql_codegen = "NOT_CONFIGURED"
+
+    - Vérifier connexion Cloud SQL :
+      _ Parser cloudsql.instanceId
+      _ Vérifier format : project:region:instance \* SI format invalide ALORS WARNING
+      SINON
       data_connect_configured = false
-    FIN SI
-  
-  - Enregistrer résultats dans deploy_results.data_connect
-FIN detection_data_connect
+      FIN SI
+
+- Enregistrer résultats dans deploy_results.data_connect
+  FIN detection_data_connect
+
 ```
 
 **Commandes à exécuter** :
@@ -1109,11 +1224,13 @@ FIN detection_data_connect
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Data Connect
 
 Statut : ✓ Configuré
 
 Configuration :
+
 - Service ID : my-dataconnect-service
 - Cloud SQL Instance : my-project:us-central1:my-db-instance
 - Database : production_db
@@ -1121,69 +1238,73 @@ Configuration :
 
 Schéma GraphQL :
 ✓ Trouvé : ./dataconnect/schema.gql
+
 - 12 types définis
 - 8 queries
 - 6 mutations
 - Tables principales : users, posts, comments, likes
 
 GraphQL Codegen : ✓ Configuré
-Generated types : ./dataconnect/__generated__/
+Generated types : ./dataconnect/**generated**/
+
 ```
 
 #### 5.2 Détection Static Deploy (SPA/SSG)
 
 **Pseudo-code** :
 ```
+
 DÉBUT detection_static_deploy
-  - Parser firebase.json section "hosting" :
-    * SI array ALORS multiple_sites = true
-    * SI object ALORS single_site = true
-  
-  - POUR CHAQUE site dans hosting FAIRE
-    - Extraire configuration :
-      * site (nom du site)
-      * public (répertoire build)
-      * ignore (fichiers ignorés)
-      * rewrites (règles de routage)
-      * headers (en-têtes personnalisés)
-      * redirects
-    
-    - Identifier application correspondante :
-      * Comparer "public" avec structure apps/
-      * Ex : "public": "apps/admin/out" → app = admin
-      * Ex : "public": "apps/public/dist" → app = public
-    
-    - Détecter type de build :
-      * SI répertoire = "out" ou contient "_next" → type = "Next.js SSG"
-      * SI répertoire = "dist" → type = "Vite/SPA"
-      * SI répertoire = "build" → type = "Create React App"
-    
-    - Vérifier existence répertoire build :
-      * test -d [public]
-      * SI existe ALORS
-        build_exists = true
-        - Calculer taille du build
-        - Compter nombre de fichiers
-        - Lister fichiers principaux (index.html, main.js, etc.)
-      SINON
-        build_exists = false
-        STATUS global = "WARNING"
-        Note : "Build directory missing - run build before deploy"
-      FIN SI
-    
-    - Vérifier rewrites pour SPA :
-      * Chercher rewrite : "source": "**", "destination": "/index.html"
-      * SI trouvé ALORS spa_routing = "CONFIGURED"
-      * SINON spa_routing = "NOT_CONFIGURED" (OK pour SSG)
-    
-    - Analyser règles de cache :
-      * Parser headers pour cache-control
-      * Identifier assets avec long cache (*.js, *.css, images)
-      * Vérifier index.html a no-cache
-    
-    - Enregistrer dans deploy_results.static[app]
+
+- Parser firebase.json section "hosting" :
+
+  - SI array ALORS multiple_sites = true
+  - SI object ALORS single_site = true
+
+- POUR CHAQUE site dans hosting FAIRE - Extraire configuration :
+  _ site (nom du site)
+  _ public (répertoire build)
+  _ ignore (fichiers ignorés)
+  _ rewrites (règles de routage)
+  _ headers (en-têtes personnalisés)
+  _ redirects
+      - Identifier application correspondante :
+        * Comparer "public" avec structure apps/
+        * Ex : "public": "apps/admin/out" → app = admin
+        * Ex : "public": "apps/public/dist" → app = public
+
+      - Détecter type de build :
+        * SI répertoire = "out" ou contient "_next" → type = "Next.js SSG"
+        * SI répertoire = "dist" → type = "Vite/SPA"
+        * SI répertoire = "build" → type = "Create React App"
+
+      - Vérifier existence répertoire build :
+        * test -d [public]
+        * SI existe ALORS
+          build_exists = true
+          - Calculer taille du build
+          - Compter nombre de fichiers
+          - Lister fichiers principaux (index.html, main.js, etc.)
+        SINON
+          build_exists = false
+          STATUS global = "WARNING"
+          Note : "Build directory missing - run build before deploy"
+        FIN SI
+
+      - Vérifier rewrites pour SPA :
+        * Chercher rewrite : "source": "**", "destination": "/index.html"
+        * SI trouvé ALORS spa_routing = "CONFIGURED"
+        * SINON spa_routing = "NOT_CONFIGURED" (OK pour SSG)
+
+      - Analyser règles de cache :
+        * Parser headers pour cache-control
+        * Identifier assets avec long cache (*.js, *.css, images)
+        * Vérifier index.html a no-cache
+
+      - Enregistrer dans deploy_results.static[app]
   FIN POUR
-FIN detection_static_deploy
+  FIN detection_static_deploy
+
 ```
 
 **Commandes à exécuter** :
@@ -1195,6 +1316,7 @@ FIN detection_static_deploy
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Static Deploy (Hosting)
 
 Sites configurés : 3
@@ -1213,66 +1335,76 @@ Sites configurés : 3
    ✓ Build directory : apps/dashboard/dist
    ✗ Build exists : Non (à générer)
    ✓ SPA routing : Configuré
-   
 3. Public
    ✓ Site : public-site-prod
    ✓ Type : Next.js SSG
    ✓ Build directory : apps/public/out
    ✓ Build exists : Oui (8.7 MB, 198 fichiers)
    ✗ SPA routing : Non configuré (normal pour SSG)
+
 ```
 
 #### 5.3 Détection SSR Deploy (App Hosting)
 
 **Pseudo-code** :
 ```
+
 DÉBUT detection_ssr_deploy
-  - Vérifier présence fichier apphosting.yaml à la racine OU dans chaque app
-  
-  - POUR CHAQUE apphosting.yaml trouvé FAIRE
-    - Parser configuration YAML :
-      * runConfig.runtime (nodejs18, nodejs20)
-      * runConfig.concurrency
-      * runConfig.cpu
-      * runConfig.memoryMiB
-      * runConfig.minInstances
-      * runConfig.maxInstances
-      * env (variables d'environnement)
-    
-    - Identifier application :
-      * Depuis chemin du fichier (apps/admin/apphosting.yaml)
-      * OU depuis field "source" dans config
-    
-    - Vérifier configuration Next.js pour SSR :
-      * Lire next.config.js de l'app
-      * Vérifier output != "export" (sinon c'est SSG pas SSR)
-      * Vérifier présence API routes dans pages/api/ ou app/api/
-      * Compter nombre de routes API
-      * Identifier middleware (middleware.ts)
-    
-    - Vérifier build SSR :
-      * Chercher .next/standalone/ ou .next/server/
-      * SI existe ALORS ssr_build_exists = true
-      * SINON ssr_build_exists = false, WARNING
-    
-    - Analyser variables d'environnement requises :
-      * Extraire depuis apphosting.yaml section env
-      * Vérifier si secrets Firebase configurés (SECRET_NAME)
-      * Pour chaque variable, vérifier si définie dans .env
-    
-    - Vérifier configuration Cloud Run (sous-jacent) :
-      * minInstances : si = 0 → cold starts possibles
-      * maxInstances : vérifier limites raisonnables
-      * memoryMiB : vérifier >= 512 pour Next.js
-    
-    - Enregistrer dans deploy_results.ssr[app]
-  FIN POUR
-  
-  - SI aucun apphosting.yaml trouvé ALORS
-    ssr_configured = false
-    Note : "SSR non configuré (OK si SPA/SSG uniquement)"
+
+- Vérifier présence fichier apphosting.yaml à la racine OU dans chaque app
+
+- POUR CHAQUE apphosting.yaml trouvé FAIRE
+
+  - Parser configuration YAML :
+
+    - runConfig.runtime (nodejs18, nodejs20)
+    - runConfig.concurrency
+    - runConfig.cpu
+    - runConfig.memoryMiB
+    - runConfig.minInstances
+    - runConfig.maxInstances
+    - env (variables d'environnement)
+
+  - Identifier application :
+
+    - Depuis chemin du fichier (apps/admin/apphosting.yaml)
+    - OU depuis field "source" dans config
+
+  - Vérifier configuration Next.js pour SSR :
+
+    - Lire next.config.js de l'app
+    - Vérifier output != "export" (sinon c'est SSG pas SSR)
+    - Vérifier présence API routes dans pages/api/ ou app/api/
+    - Compter nombre de routes API
+    - Identifier middleware (middleware.ts)
+
+  - Vérifier build SSR :
+
+    - Chercher .next/standalone/ ou .next/server/
+    - SI existe ALORS ssr_build_exists = true
+    - SINON ssr_build_exists = false, WARNING
+
+  - Analyser variables d'environnement requises :
+
+    - Extraire depuis apphosting.yaml section env
+    - Vérifier si secrets Firebase configurés (SECRET_NAME)
+    - Pour chaque variable, vérifier si définie dans .env
+
+  - Vérifier configuration Cloud Run (sous-jacent) :
+
+    - minInstances : si = 0 → cold starts possibles
+    - maxInstances : vérifier limites raisonnables
+    - memoryMiB : vérifier >= 512 pour Next.js
+
+  - Enregistrer dans deploy_results.ssr[app]
+    FIN POUR
+
+- SI aucun apphosting.yaml trouvé ALORS
+  ssr_configured = false
+  Note : "SSR non configuré (OK si SPA/SSG uniquement)"
   FIN SI
-FIN detection_ssr_deploy
+  FIN detection_ssr_deploy
+
 ```
 
 **Commandes à exécuter** :
@@ -1285,6 +1417,7 @@ FIN detection_ssr_deploy
 
 **Format de résultat dans rapport** :
 ```
+
 Section : SSR Deploy (App Hosting)
 
 Applications SSR : 1
@@ -1295,116 +1428,117 @@ Applications SSR : 1
    ✓ Resources : 1 CPU, 1024 MB RAM
    ✓ Scaling : min 0, max 10 instances
    ⚠ Cold starts possibles (minInstances = 0)
-   
+
    Next.js SSR :
    ✓ Output mode : server (SSR enabled)
    ✓ API routes : 7 trouvées
    ✓ Middleware : Présent (auth check)
    ✓ Build SSR : apps/admin/.next/standalone/ (23.5 MB)
-   
+
    Variables d'environnement :
    ✓ FIREBASE_API_KEY (from secret)
    ✓ DATABASE_URL (from secret)
    ✗ NEXT_PUBLIC_APP_URL (manquante dans .env)
 
 Dashboard & Public : Static deploy uniquement (voir section précédente)
+
 ```
 
 #### 5.4 Synthèse des options de déploiement
 
 **Pseudo-code** :
 ```
+
 DÉBUT synthese_deploiement
-  - Compiler liste de tous les déploiements possibles :
-    deployments_available = []
-    
-    - SI data_connect_configured ALORS
-      Ajouter : { type: "dataconnect", name: "Data Connect Schema", command: "firebase deploy --only dataconnect" }
-    
-    - POUR CHAQUE static site FAIRE
-      Ajouter : { type: "hosting", app: [nom], name: "Static [app]", command: "firebase deploy --only hosting:[site]" }
-    
-    - POUR CHAQUE ssr app FAIRE
-      Ajouter : { type: "apphosting", app: [nom], name: "SSR [app]", command: "firebase apphosting:deploy [app]" }
-    
-    - SI functions configurées (firebase.json.functions) ALORS
-      Ajouter : { type: "functions", name: "Cloud Functions", command: "firebase deploy --only functions" }
-    
-    - SI firestore rules (firestore.rules) ALORS
-      Ajouter : { type: "firestore:rules", name: "Firestore Rules", command: "firebase deploy --only firestore:rules" }
-    
-    - SI storage rules (storage.rules) ALORS
-      Ajouter : { type: "storage", name: "Storage Rules", command: "firebase deploy --only storage" }
-  
-  - Créer menu interactif :
-    Afficher : "Options de déploiement disponibles :"
-    
-    [0] Tout déployer (all)
-    [1] Admin uniquement (hosting:admin-app-prod + apphosting si SSR)
-    [2] Dashboard uniquement (hosting:dashboard-app-prod)
-    [3] Public uniquement (hosting:public-site-prod)
-    [4] Data Connect uniquement
-    [5] Firestore rules uniquement
-    [6] Functions uniquement
-    [7] Déploiement personnalisé (choisir composants)
-    [8] Passer (ne pas déployer maintenant)
-    
-  - Attendre input utilisateur
-  
-  - SELON choix utilisateur :
-    CASE 0: # Tout
-      deploy_targets = "tous les composants"
-      deploy_command = "firebase deploy --project=[projectId]"
-    
-    CASE 1: # Admin
-      deploy_targets = "admin"
-      SI admin_is_ssr ALORS
-        deploy_command = "firebase deploy --only hosting:admin-app-prod && firebase apphosting:deploy admin"
-      SINON
-        deploy_command = "firebase deploy --only hosting:admin-app-prod"
-      FIN SI
-    
-    CASE 2: # Dashboard
-      deploy_targets = "dashboard"
-      deploy_command = "firebase deploy --only hosting:dashboard-app-prod"
-    
-    CASE 3: # Public
-      deploy_targets = "public"
-      deploy_command = "firebase deploy --only hosting:public-site-prod"
-    
-    CASE 4-6: # Composants individuels
-      [Construire commande appropriée]
-    
-    CASE 7: # Personnalisé
-      Afficher checkboxes pour chaque composant
-      Construire commande combinée
-    
-    CASE 8: # Passer
-      deploy_targets = "aucun"
-      deploy_command = null
+
+- Compiler liste de tous les déploiements possibles :
+  deployments_available = []
+
+  - SI data_connect_configured ALORS
+    Ajouter : { type: "dataconnect", name: "Data Connect Schema", command: "firebase deploy --only dataconnect" }
+
+  - POUR CHAQUE static site FAIRE
+    Ajouter : { type: "hosting", app: [nom], name: "Static [app]", command: "firebase deploy --only hosting:[site]" }
+
+  - POUR CHAQUE ssr app FAIRE
+    Ajouter : { type: "apphosting", app: [nom], name: "SSR [app]", command: "firebase apphosting:deploy [app]" }
+
+  - SI functions configurées (firebase.json.functions) ALORS
+    Ajouter : { type: "functions", name: "Cloud Functions", command: "firebase deploy --only functions" }
+
+  - SI firestore rules (firestore.rules) ALORS
+    Ajouter : { type: "firestore:rules", name: "Firestore Rules", command: "firebase deploy --only firestore:rules" }
+
+  - SI storage rules (storage.rules) ALORS
+    Ajouter : { type: "storage", name: "Storage Rules", command: "firebase deploy --only storage" }
+
+- Créer menu interactif :
+  Afficher : "Options de déploiement disponibles :"
+
+  [0] Tout déployer (all)
+  [1] Admin uniquement (hosting:admin-app-prod + apphosting si SSR)
+  [2] Dashboard uniquement (hosting:dashboard-app-prod)
+  [3] Public uniquement (hosting:public-site-prod)
+  [4] Data Connect uniquement
+  [5] Firestore rules uniquement
+  [6] Functions uniquement
+  [7] Déploiement personnalisé (choisir composants)
+  [8] Passer (ne pas déployer maintenant)
+
+- Attendre input utilisateur
+
+- SELON choix utilisateur :
+  CASE 0: # Tout
+  deploy_targets = "tous les composants"
+  deploy_command = "firebase deploy --project=[projectId]"
+
+  CASE 1: # Admin
+  deploy_targets = "admin"
+  SI admin_is_ssr ALORS
+  deploy_command = "firebase deploy --only hosting:admin-app-prod && firebase apphosting:deploy admin"
+  SINON
+  deploy_command = "firebase deploy --only hosting:admin-app-prod"
+  FIN SI
+
+  CASE 2: # Dashboard
+  deploy_targets = "dashboard"
+  deploy_command = "firebase deploy --only hosting:dashboard-app-prod"
+
+  CASE 3: # Public
+  deploy_targets = "public"
+  deploy_command = "firebase deploy --only hosting:public-site-prod"
+
+  CASE 4-6: # Composants individuels
+  [Construire commande appropriée]
+
+  CASE 7: # Personnalisé
+  Afficher checkboxes pour chaque composant
+  Construire commande combinée
+
+  CASE 8: # Passer
+  deploy_targets = "aucun"
+  deploy_command = null
   FIN SELON
-  
-  - SI deploy_command != null ALORS
-    Afficher : "Commande de déploiement préparée :"
-    Afficher : deploy_command
-    
-    Demander confirmation : "Exécuter le déploiement maintenant ? (y/n)"
-    
-    SI utilisateur confirme ALORS
-      - Vérifier prérequis :
-        * Tous les builds existent
-        * Pas d'erreurs critiques dans l'audit
-        * Authentifié Firebase CLI (firebase login:list)
-      
+
+- SI deploy_command != null ALORS
+  Afficher : "Commande de déploiement préparée :"
+  Afficher : deploy_command
+
+  Demander confirmation : "Exécuter le déploiement maintenant ? (y/n)"
+
+  SI utilisateur confirme ALORS - Vérifier prérequis :
+  _ Tous les builds existent
+  _ Pas d'erreurs critiques dans l'audit \* Authentifié Firebase CLI (firebase login:list)
+
       SI prérequis OK ALORS
         - Capturer timestamp début deploy
         - Exécuter deploy_command
         - Rediriger vers /tmp/deploy-output.log
         - Afficher progression en temps réel
-        
+
         - Attendre fin de déploiement
         - Capturer code sortie
-        
+
         SI succès ALORS
           deploy_status = "SUCCESS"
           - Extraire URLs de déploiement depuis logs
@@ -1414,22 +1548,24 @@ DÉBUT synthese_deploiement
           STATUS global = "ERROR"
           - Extraire erreurs
         FIN SI
-        
+
         - Capturer timestamp fin
         - Calculer durée
       SINON
         Afficher : "⚠️ Prérequis non satisfaits. Déploiement annulé."
         Lister prérequis manquants
       FIN SI
-    SINON
-      deploy_status = "SKIPPED_BY_USER"
-    FIN SI
+
   SINON
-    deploy_status = "NOT_REQUESTED"
+  deploy_status = "SKIPPED_BY_USER"
   FIN SI
-  
-  - Enregistrer dans deploy_results.execution
-FIN synthese_deploiement
+  SINON
+  deploy_status = "NOT_REQUESTED"
+  FIN SI
+
+- Enregistrer dans deploy_results.execution
+  FIN synthese_deploiement
+
 ```
 
 **Commandes à exécuter** :
@@ -1440,6 +1576,7 @@ FIN synthese_deploiement
 
 **Format de résultat dans rapport** :
 ```
+
 Section : Déploiement
 
 Choix utilisateur : Admin uniquement
@@ -1459,6 +1596,7 @@ URLs de déploiement :
 🌐 Admin app (custom domain) : https://admin.myapp.com
 
 Détails du déploiement :
+
 - Fichiers uploadés : 342
 - Taille totale : 12.4 MB
 - Cache utilisé : 67% (230 fichiers inchangés)
@@ -1467,38 +1605,43 @@ Détails du déploiement :
 
 [Bouton : Ouvrir admin app]
 [Bouton : Voir logs complets]
+
 ```
 
 **Appel à Gemini si déploiement échoue** :
 ```
+
 SI deploy_status == "FAILED" ALORS
-  - Extraire erreurs du log de déploiement
-  
-  Proposer :
-  "❌ Déploiement échoué.
-  
-  Voulez-vous que Gemini analyse l'erreur et propose une solution ? (y/n)"
-  
-  SI accepté ALORS
-    Envoyer à Gemini :
-    "Firebase deployment failed for a Turborepo project.
-    
+
+- Extraire erreurs du log de déploiement
+
+Proposer :
+"❌ Déploiement échoué.
+
+Voulez-vous que Gemini analyse l'erreur et propose une solution ? (y/n)"
+
+SI accepté ALORS
+Envoyer à Gemini :
+"Firebase deployment failed for a Turborepo project.
+
     Deployment command:
     [deploy_command]
-    
+
     Deployment target:
     [deploy_targets]
-    
+
     Error logs:
+
 ```
     [Extrait /tmp/deploy-output.log avec erreurs]
 ```
-    
+
     Firebase configuration:
+
 ```json
     [firebase.json relevant sections]
 ```
-    
+
     Analyze the deployment error and provide:
     1. Root cause identification
     2. Whether it's a configuration, build, or authentication issue
@@ -1506,7 +1649,7 @@ SI deploy_status == "FAILED" ALORS
     4. If config issue, provide corrected firebase.json or apphosting.yaml
     5. If build issue, explain what needs to be rebuilt
     6. If auth issue, provide authentication steps
-    
+
     Common issues to check:
     - Missing or incorrect hosting configuration
     - Build directory not found
@@ -1514,120 +1657,129 @@ SI deploy_status == "FAILED" ALORS
     - Quota exceeded
     - Invalid project ID
     - Missing required files"
+
 FIN SI
 
-
 DÉBUT calcul_statut_global
-  - Initialiser compteurs :
-    * total_checks = 0
-    * passed_checks = 0
-    * warning_checks = 0
-    * error_checks = 0
-  
-  - Évaluer chaque phase :
-    
-    # Configuration Firebase
-    SI firebase.json ET .firebaserc existent ALORS
-      passed_checks++
-    SINON
-      error_checks++
-    FIN SI
-    total_checks++
-    
-    SI divergences de projectId > 0 ALORS
-      warning_checks++
-      total_checks++
-    FIN SI
-    
-    # Git
-    SI git_status == "CLEAN" ALORS
-      passed_checks++
-    SINON SI git_status == "DIRTY" ALORS
-      warning_checks++
-    SINON SI git_status == "CONFLICT" ALORS
-      error_checks++
-    FIN SI
-    total_checks++
-    
-    # Build
-    POUR CHAQUE app IN [admin, dashboard, public] FAIRE
-      SI build_results[app].status == "SUCCESS" ALORS
-        passed_checks++
-      SINON SI build_results[app].status == "SUCCESS_WITH_WARNINGS" ALORS
-        warning_checks++
-      SINON
-        error_checks++
-      FIN SI
-      total_checks++
-    FIN POUR
-    
-    # Lint
-    SI lint_status == "PASSED" ALORS
-      passed_checks++
-    SINON SI lint_status == "WARNINGS" ALORS
-      warning_checks++
-    SINON SI lint_status == "FAILED" ALORS
-      error_checks++
-    FIN SI
-    total_checks++
-    
-    # Tests
-    SI test_status == "PASSED" pour tous frameworks ALORS
-      passed_checks++
-    SINON SI tests échoués > 0 ALORS
-      error_checks++
-    FIN SI
-    total_checks++
-    
-    # Emulateurs
-    SI emulators_status == "RUNNING" OU "NOT_STARTED" ALORS
-      passed_checks++
-    SINON
-      warning_checks++
-    FIN SI
-    total_checks++
-    
-    # Deploy config
-    SI au moins un type de deploy configuré ALORS
-      passed_checks++
-    SINON
-      warning_checks++
-    FIN SI
-    total_checks++
-  
-  - Calculer statut final :
-    SI error_checks > 0 ALORS
-      GLOBAL_STATUS = "CRITICAL"
-      status_color = "#dc2626" (rouge)
-      status_icon = "⚠️"
-      status_message = "Des erreurs critiques nécessitent une attention immédiate"
-    SINON SI warning_checks > 0 ALORS
-      GLOBAL_STATUS = "WARNING"
-      status_color = "#f59e0b" (orange)
-      status_icon = "⚠"
-      status_message = "Le projet fonctionne mais présente des avertissements"
-    SINON
-      GLOBAL_STATUS = "HEALTHY"
-      status_color = "#10b981" (vert)
-      status_icon = "✓"
-      status_message = "Tous les systèmes sont opérationnels"
-    FIN SI
-  
-  - Calculer score de santé (0-100) :
-    health_score = (passed_checks / total_checks) × 100
-    Arrondir à l'entier
-  
-  - Enregistrer métriques globales :
-    * timestamp_debut
-    * timestamp_fin
-    * duree_totale (en secondes et format humain)
-    * total_checks
-    * passed_checks
-    * warning_checks
-    * error_checks
-    * health_score
-    * GLOBAL_STATUS
-FIN calcul_statut_global
+
+- Initialiser compteurs :
+
+  - total_checks = 0
+  - passed_checks = 0
+  - warning_checks = 0
+  - error_checks = 0
+
+- Évaluer chaque phase :
+
+  # Configuration Firebase
+
+  SI firebase.json ET .firebaserc existent ALORS
+  passed_checks++
+  SINON
+  error_checks++
+  FIN SI
+  total_checks++
+
+  SI divergences de projectId > 0 ALORS
+  warning_checks++
+  total_checks++
+  FIN SI
+
+  # Git
+
+  SI git_status == "CLEAN" ALORS
+  passed_checks++
+  SINON SI git_status == "DIRTY" ALORS
+  warning_checks++
+  SINON SI git_status == "CONFLICT" ALORS
+  error_checks++
+  FIN SI
+  total_checks++
+
+  # Build
+
+  POUR CHAQUE app IN [admin, dashboard, public] FAIRE
+  SI build_results[app].status == "SUCCESS" ALORS
+  passed_checks++
+  SINON SI build_results[app].status == "SUCCESS_WITH_WARNINGS" ALORS
+  warning_checks++
+  SINON
+  error_checks++
+  FIN SI
+  total_checks++
+  FIN POUR
+
+  # Lint
+
+  SI lint_status == "PASSED" ALORS
+  passed_checks++
+  SINON SI lint_status == "WARNINGS" ALORS
+  warning_checks++
+  SINON SI lint_status == "FAILED" ALORS
+  error_checks++
+  FIN SI
+  total_checks++
+
+  # Tests
+
+  SI test_status == "PASSED" pour tous frameworks ALORS
+  passed_checks++
+  SINON SI tests échoués > 0 ALORS
+  error_checks++
+  FIN SI
+  total_checks++
+
+  # Emulateurs
+
+  SI emulators_status == "RUNNING" OU "NOT_STARTED" ALORS
+  passed_checks++
+  SINON
+  warning_checks++
+  FIN SI
+  total_checks++
+
+  # Deploy config
+
+  SI au moins un type de deploy configuré ALORS
+  passed_checks++
+  SINON
+  warning_checks++
+  FIN SI
+  total_checks++
+
+- Calculer statut final :
+  SI error_checks > 0 ALORS
+  GLOBAL_STATUS = "CRITICAL"
+  status_color = "#dc2626" (rouge)
+  status_icon = "⚠️"
+  status_message = "Des erreurs critiques nécessitent une attention immédiate"
+  SINON SI warning_checks > 0 ALORS
+  GLOBAL_STATUS = "WARNING"
+  status_color = "#f59e0b" (orange)
+  status_icon = "⚠"
+  status_message = "Le projet fonctionne mais présente des avertissements"
+  SINON
+  GLOBAL_STATUS = "HEALTHY"
+  status_color = "#10b981" (vert)
+  status_icon = "✓"
+  status_message = "Tous les systèmes sont opérationnels"
+  FIN SI
+
+- Calculer score de santé (0-100) :
+  health_score = (passed_checks / total_checks) × 100
+  Arrondir à l'entier
+
+- Enregistrer métriques globales :
+  _ timestamp_debut
+  _ timestamp_fin
+  _ duree_totale (en secondes et format humain)
+  _ total_checks
+  _ passed_checks
+  _ warning_checks
+  _ error_checks
+  _ health_score \* GLOBAL_STATUS
+  FIN calcul_statut_global
+
 ```
 
 **Commandes à exécuter** :
@@ -1637,6 +1789,7 @@ FIN calcul_statut_global
 
 **Format de résultat (données pour HTML)** :
 ```
+
 Variables globales :
 GLOBAL_STATUS = "WARNING"
 health_score = 87
@@ -1646,150 +1799,158 @@ warning_checks = 2
 error_checks = 0
 duree_totale = "3m 47s"
 timestamp_rapport = "2025-10-15 14:32:18"
+
 ```
 
 #### 6.2 Structure du document HTML
 
 **Pseudo-code** :
 ```
+
 DÉBUT generation_html
-  - Créer fichier HTML : /apps/admin/reports/titanic-health-TIMESTAMP.html
-  - OU : /superdev/reports/titanic-health.html (écrase version précédente)
-  
-  - Structure du document :
-  
-    <!DOCTYPE html>
-    <html lang="fr">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Titanic Health Check - [timestamp]</title>
-      <style>
-        [CSS embarqué - voir section 6.3]
-      </style>
-    </head>
-    <body>
-      <!-- Header avec logo et titre -->
-      <header>
-        [Section 6.4]
-      </header>
-      
-      <!-- Résumé exécutif -->
-      <section id="executive-summary">
-        [Section 6.5]
-      </section>
-      
-      <!-- Dashboard de métriques -->
-      <section id="metrics-dashboard">
-        [Section 6.6]
-      </section>
-      
-      <!-- Sections détaillées -->
-      <main>
-        <section id="config-firebase">
-          [Section 6.7.1]
+
+- Créer fichier HTML : /apps/admin/reports/titanic-health-TIMESTAMP.html
+- OU : /superdev/reports/titanic-health.html (écrase version précédente)
+
+- Structure du document :
+      <!DOCTYPE html>
+      <html lang="fr">
+      <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Titanic Health Check - [timestamp]</title>
+        <style>
+          [CSS embarqué - voir section 6.3]
+        </style>
+      </head>
+      <body>
+        <!-- Header avec logo et titre -->
+        <header>
+          [Section 6.4]
+        </header>
+
+        <!-- Résumé exécutif -->
+        <section id="executive-summary">
+          [Section 6.5]
         </section>
-        
-        <section id="git-status">
-          [Section 6.7.2]
+
+        <!-- Dashboard de métriques -->
+        <section id="metrics-dashboard">
+          [Section 6.6]
         </section>
-        
-        <section id="build-results">
-          [Section 6.7.3]
+
+        <!-- Sections détaillées -->
+        <main>
+          <section id="config-firebase">
+            [Section 6.7.1]
+          </section>
+
+          <section id="git-status">
+            [Section 6.7.2]
+          </section>
+
+          <section id="build-results">
+            [Section 6.7.3]
+          </section>
+
+          <section id="test-results">
+            [Section 6.7.4]
+          </section>
+
+          <section id="emulators">
+            [Section 6.7.5]
+          </section>
+
+          <section id="deploy-config">
+            [Section 6.7.6]
+          </section>
+        </main>
+
+        <!-- Logs détaillés (accordéons) -->
+        <section id="detailed-logs">
+          [Section 6.8]
         </section>
-        
-        <section id="test-results">
-          [Section 6.7.4]
-        </section>
-        
-        <section id="emulators">
-          [Section 6.7.5]
-        </section>
-        
-        <section id="deploy-config">
-          [Section 6.7.6]
-        </section>
-      </main>
-      
-      <!-- Logs détaillés (accordéons) -->
-      <section id="detailed-logs">
-        [Section 6.8]
-      </section>
-      
-      <!-- Footer avec métadonnées -->
-      <footer>
-        [Section 6.9]
-      </footer>
-      
-      <script>
-        [JavaScript pour interactivité - Section 6.10]
-      </script>
-    </body>
-    </html>
-FIN generation_html
+
+        <!-- Footer avec métadonnées -->
+        <footer>
+          [Section 6.9]
+        </footer>
+
+        <script>
+          [JavaScript pour interactivité - Section 6.10]
+        </script>
+      </body>
+      </html>
+  FIN generation_html
+
 ```
 
 #### 6.3 Styles CSS embarqués
 
 **Pseudo-code** :
 ```
+
 DÉBUT generation_css
-  Inclure dans <style> :
-  
-  - Reset et base :
-    * { box-sizing, margin, padding }
+Inclure dans <style> :
+
+- Reset et base :
+
+  - { box-sizing, margin, padding }
     body { font-family: system-ui, background: #f9fafb, color: #111827 }
-  
-  - Layout :
-    .container { max-width: 1400px, margin: auto, padding }
-    .grid { display: grid, gap, responsive columns }
-  
-  - Composants réutilisables :
-    .card { background: white, border-radius, box-shadow, padding }
-    .badge { inline badge avec couleurs selon statut }
-    .status-indicator { cercle coloré pour statut }
-    .progress-bar { barre de progression avec gradient }
-  
-  - Statuts avec couleurs :
-    .status-success { color: #10b981, background: #d1fae5 }
-    .status-warning { color: #f59e0b, background: #fef3c7 }
-    .status-error { color: #dc2626, background: #fee2e2 }
-  
-  - Tableaux :
-    table { width: 100%, border-collapse }
-    th { background: #f3f4f6, text-align: left, font-weight: 600 }
-    td { border-bottom, padding, vertical-align: top }
-    tr:hover { background: #f9fafb }
-  
-  - Accordéons (pour logs) :
-    .accordion { cursor: pointer, transition }
-    .accordion.active { background change }
-    .accordion-content { max-height: 0, overflow: hidden, transition }
-    .accordion-content.open { max-height: 1000px }
-  
-  - Utilitaires :
-    .text-sm, .text-lg, .text-xl, .text-2xl, .text-3xl
-    .font-bold, .font-semibold
-    .mt-4, .mb-2, .p-4, .px-6
-    .flex, .justify-between, .items-center
-  
-  - Responsive :
-    @media (max-width: 768px) { grid colonnes 1, reduce padding }
-  
-  - Animations :
-    @keyframes fadeIn { opacity 0 to 1 }
-    @keyframes slideDown { transform translateY }
-    .fade-in { animation: fadeIn 0.3s }
-  
-  - Print styles :
-    @media print { hide accordions, expand all sections, remove shadows }
-FIN generation_css
+
+- Layout :
+  .container { max-width: 1400px, margin: auto, padding }
+  .grid { display: grid, gap, responsive columns }
+
+- Composants réutilisables :
+  .card { background: white, border-radius, box-shadow, padding }
+  .badge { inline badge avec couleurs selon statut }
+  .status-indicator { cercle coloré pour statut }
+  .progress-bar { barre de progression avec gradient }
+
+- Statuts avec couleurs :
+  .status-success { color: #10b981, background: #d1fae5 }
+  .status-warning { color: #f59e0b, background: #fef3c7 }
+  .status-error { color: #dc2626, background: #fee2e2 }
+
+- Tableaux :
+  table { width: 100%, border-collapse }
+  th { background: #f3f4f6, text-align: left, font-weight: 600 }
+  td { border-bottom, padding, vertical-align: top }
+  tr:hover { background: #f9fafb }
+
+- Accordéons (pour logs) :
+  .accordion { cursor: pointer, transition }
+  .accordion.active { background change }
+  .accordion-content { max-height: 0, overflow: hidden, transition }
+  .accordion-content.open { max-height: 1000px }
+
+- Utilitaires :
+  .text-sm, .text-lg, .text-xl, .text-2xl, .text-3xl
+  .font-bold, .font-semibold
+  .mt-4, .mb-2, .p-4, .px-6
+  .flex, .justify-between, .items-center
+
+- Responsive :
+  @media (max-width: 768px) { grid colonnes 1, reduce padding }
+
+- Animations :
+  @keyframes fadeIn { opacity 0 to 1 }
+  @keyframes slideDown { transform translateY }
+  .fade-in { animation: fadeIn 0.3s }
+
+- Print styles :
+  @media print { hide accordions, expand all sections, remove shadows }
+  FIN generation_css
+
 ```
 
 **Instructions pour Gemini** :
 ```
+
 "Generate modern, clean CSS styles for the Titanic Health Check report.
 Use a design system approach with:
+
 - Color palette: green (#10b981) for success, orange (#f59e0b) for warnings, red (#dc2626) for errors
 - Gray scale: #111827 (text), #6b7280 (secondary), #f3f4f6 (backgrounds)
 - Font: system-ui stack
@@ -1798,13 +1959,16 @@ Use a design system approach with:
 - Shadows: subtle shadows for depth (0 1px 3px rgba(0,0,0,0.1))
 - Responsive: mobile-first approach, breakpoint at 768px
 - Accessibility: sufficient contrast ratios, focus states"
+
 ```
 
 #### 6.4 Header du rapport
 
 **Pseudo-code** :
 ```
+
 DÉBUT generation_header
+
   <header class="header bg-gradient">
     <div class="container">
       <div class="flex justify-between items-center">
@@ -1837,6 +2001,7 @@ FIN generation_header
 ```
 
 **Données à injecter** :
+
 - `status_color` depuis calcul statut global
 - `status_icon`, `GLOBAL_STATUS`, `health_score`
 - `timestamp_rapport`, `duree_totale`, `total_checks`
@@ -1845,18 +2010,19 @@ FIN generation_header
 #### 6.5 Résumé exécutif
 
 **Pseudo-code** :
+
 ```
 DÉBUT generation_resume_executif
   <section id="executive-summary" class="container mt-8">
     <div class="card">
       <h2 class="text-2xl font-bold mb-4">📋 Résumé Exécutif</h2>
-      
+
       <div class="status-message mb-6">
         <p class="text-lg">
           [status_icon] [status_message]
         </p>
       </div>
-      
+
       <div class="grid grid-cols-4 gap-4">
         <!-- Carte: Checks passed -->
         <div class="metric-card status-success">
@@ -1864,21 +2030,21 @@ DÉBUT generation_resume_executif
           <div class="metric-label">Vérifications réussies</div>
           <div class="metric-icon">✓</div>
         </div>
-        
+
         <!-- Carte: Warnings -->
         <div class="metric-card status-warning">
           <div class="metric-value">[warning_checks]</div>
           <div class="metric-label">Avertissements</div>
           <div class="metric-icon">⚠</div>
         </div>
-        
+
         <!-- Carte: Errors -->
         <div class="metric-card status-error">
           <div class="metric-value">[error_checks]</div>
           <div class="metric-label">Erreurs critiques</div>
           <div class="metric-icon">✗</div>
         </div>
-        
+
         <!-- Carte: Health score -->
         <div class="metric-card">
           <div class="metric-value">[health_score]%</div>
@@ -1888,7 +2054,7 @@ DÉBUT generation_resume_executif
           </div>
         </div>
       </div>
-      
+
       <!-- Points d'attention prioritaires -->
       <div class="mt-6">
         <h3 class="text-lg font-semibold mb-3">🎯 Points d'attention prioritaires</h3>
@@ -1902,7 +2068,7 @@ DÉBUT generation_resume_executif
           [FIN POUR]
         </ul>
       </div>
-      
+
       <!-- Actions recommandées -->
       <div class="mt-6 p-4 bg-blue-50 border-l-4 border-blue-500">
         <h3 class="text-lg font-semibold mb-2">💡 Actions recommandées</h3>
@@ -1920,6 +2086,7 @@ FIN generation_resume_executif
 ```
 
 **Logique de priorisation des points d'attention** :
+
 ```
 Liste priorité (ordre décroissant) :
 1. Conflits Git non résolus
@@ -1939,72 +2106,73 @@ Limiter à 5 points d'attention max dans le résumé
 #### 6.6 Dashboard de métriques
 
 **Pseudo-code** :
+
 ```
 DÉBUT generation_metrics_dashboard
   <section id="metrics-dashboard" class="container mt-8">
     <h2 class="text-2xl font-bold mb-6">📊 Vue d'ensemble des métriques</h2>
-    
+
     <div class="grid grid-cols-3 gap-6">
       <!-- Colonne 1: Build & Code Quality -->
       <div class="card">
         <h3 class="text-lg font-semibold mb-4 border-b pb-2">
           🔨 Build & Qualité
         </h3>
-        
+
         <div class="metric-row">
           <span class="metric-label">Applications</span>
           <span class="metric-value">
-            [admin_build_status_icon] 
+            [admin_build_status_icon]
             [dashboard_build_status_icon]
             [public_build_status_icon]
           </span>
         </div>
-        
+
         <div class="metric-row">
           <span class="metric-label">Durée totale build</span>
           <span class="metric-value">[total_build_duration]s</span>
         </div>
-        
+
         <div class="metric-row">
           <span class="metric-label">Erreurs build</span>
           <span class="metric-value [color-class]">[total_build_errors]</span>
         </div>
-        
+
         <div class="metric-row">
           <span class="metric-label">Warnings build</span>
           <span class="metric-value [color-class]">[total_build_warnings]</span>
         </div>
-        
+
         <div class="metric-row">
           <span class="metric-label">Lint status</span>
           <span class="badge [lint-status-class]">[lint_status]</span>
         </div>
       </div>
-      
+
       <!-- Colonne 2: Tests & Coverage -->
       <div class="card">
         <h3 class="text-lg font-semibold mb-4 border-b pb-2">
           🧪 Tests
         </h3>
-        
+
         <div class="metric-row">
           <span class="metric-label">Tests exécutés</span>
           <span class="metric-value">[total_tests]</span>
         </div>
-        
+
         <div class="metric-row">
           <span class="metric-label">Taux de réussite</span>
           <span class="metric-value text-lg font-bold [color]">
             [test_success_rate]%
           </span>
         </div>
-        
+
         <div class="progress-bar-container">
           <div class="progress-bar-segment success" style="width: [passed_percent]%"></div>
           <div class="progress-bar-segment failed" style="width: [failed_percent]%"></div>
           <div class="progress-bar-segment skipped" style="width: [skipped_percent]%"></div>
         </div>
-        
+
         <div class="metric-legend">
           <span class="legend-item">
             <span class="legend-color success"></span>
@@ -2019,34 +2187,34 @@ DÉBUT generation_metrics_dashboard
             [skipped_tests] skipped
           </span>
         </div>
-        
+
         <div class="metric-row mt-4">
           <span class="metric-label">Durée moyenne</span>
           <span class="metric-value">[avg_test_duration]ms</span>
         </div>
       </div>
-      
+
       <!-- Colonne 3: Git & Deploy -->
       <div class="card">
         <h3 class="text-lg font-semibold mb-4 border-b pb-2">
           📦 Git & Déploiement
         </h3>
-        
+
         <div class="metric-row">
           <span class="metric-label">Git status</span>
           <span class="badge [git-status-class]">[git_status]</span>
         </div>
-        
+
         <div class="metric-row">
           <span class="metric-label">Fichiers modifiés</span>
           <span class="metric-value">[modified_files_count]</span>
         </div>
-        
+
         <div class="metric-row">
           <span class="metric-label">Dernier commit</span>
           <span class="metric-value text-sm">[last_commit_age]</span>
         </div>
-        
+
         <div class="metric-row mt-4 pt-4 border-t">
           <span class="metric-label">Config déploiement</span>
           <span class="metric-value">
@@ -2055,7 +2223,7 @@ DÉBUT generation_metrics_dashboard
             [SI ssr] <span class="deploy-type-badge">SSR</span>
           </span>
         </div>
-        
+
         <div class="metric-row">
           <span class="metric-label">Émulateurs</span>
           <span class="badge [emulator-status-class]">
@@ -2064,7 +2232,7 @@ DÉBUT generation_metrics_dashboard
         </div>
       </div>
     </div>
-    
+
     <!-- Timeline des phases d'exécution -->
     <div class="card mt-6">
       <h3 class="text-lg font-semibold mb-4">⏱️ Timeline d'exécution</h3>
@@ -2086,6 +2254,7 @@ FIN generation_metrics_dashboard
 ```
 
 **Données à calculer** :
+
 - Sommes et moyennes depuis les résultats collectés
 - Pourcentages pour barres de progression
 - Durées relatives pour timeline (% de durée totale)
@@ -2096,12 +2265,13 @@ FIN generation_metrics_dashboard
 ##### 6.7.1 Configuration Firebase
 
 **Pseudo-code** :
+
 ```
 DÉBUT section_config_firebase
   <section id="config-firebase" class="container mt-8">
     <div class="card">
       <h2 class="text-xl font-bold mb-4">⚙️ Configuration Firebase</h2>
-      
+
       <!-- Fichiers de configuration -->
       <div class="subsection">
         <h3 class="text-lg font-semibold mb-3">Fichiers détectés</h3>
@@ -2132,7 +2302,7 @@ DÉBUT section_config_firebase
           </tbody>
         </table>
       </div>
-      
+
       <!-- Environnements configurés -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Environnements</h3>
@@ -2147,7 +2317,7 @@ DÉBUT section_config_firebase
           </div>
         </div>
       </div>
-      
+
       <!-- Clés Firebase par application -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Clés Firebase</h3>
@@ -2182,7 +2352,7 @@ DÉBUT section_config_firebase
           </tbody>
         </table>
       </div>
-      
+
       <!-- Vérifications de cohérence -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Cohérence</h3>
@@ -2202,7 +2372,7 @@ DÉBUT section_config_firebase
           </div>
         [FIN SI]
       </div>
-      
+
       <!-- Services Firebase configurés -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Services configurés</h3>
@@ -2228,7 +2398,7 @@ DÉBUT section_git_status
   <section id="git-status" class="container mt-8">
     <div class="card">
       <h2 class="text-xl font-bold mb-4">📚 État Git</h2>
-      
+
       <!-- Statut du working directory -->
       <div class="status-banner [git-status-class]">
         <div class="status-banner-icon">[icon]</div>
@@ -2237,13 +2407,13 @@ DÉBUT section_git_status
             Working Directory: [git_status]
           </div>
           <div class="status-banner-stats">
-            [modified_count] modifiés • 
-            [untracked_count] non suivis • 
+            [modified_count] modifiés •
+            [untracked_count] non suivis •
             [conflicts_count] conflits
           </div>
         </div>
       </div>
-      
+
       <!-- Informations de branche -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Branche et remote</h3>
@@ -2270,7 +2440,7 @@ DÉBUT section_git_status
           </div>
         </div>
       </div>
-      
+
       <!-- Fichiers non commités -->
       [SI modified_count + untracked_count > 0]
         <div class="subsection mt-6">
@@ -2292,7 +2462,7 @@ DÉBUT section_git_status
           </div>
         </div>
       [FIN SI]
-      
+
       <!-- Historique récent -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Historique récent (5 derniers commits)</h3>
@@ -2312,20 +2482,20 @@ DÉBUT section_git_status
             </div>
           [FIN POUR]
         </div>
-        
+
 
 [SI last_commit_age > 7 jours]
           <div class="alert alert-warning mt-4">
             <div class="alert-icon">⚠️</div>
             <div class="alert-content">
               <div class="alert-title">Inactivité détectée</div>
-              <p>Le dernier commit date de [last_commit_age] jours. 
+              <p>Le dernier commit date de [last_commit_age] jours.
               Le projet semble inactif.</p>
             </div>
           </div>
         [FIN SI]
       </div>
-      
+
       <!-- Branches locales -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Branches locales</h3>
@@ -2349,12 +2519,13 @@ FIN section_git_status
 ##### 6.7.3 Résultats des builds
 
 **Pseudo-code** :
+
 ```
 DÉBUT section_build_results
   <section id="build-results" class="container mt-8">
     <div class="card">
       <h2 class="text-xl font-bold mb-4">🔨 Résultats des builds</h2>
-      
+
       <!-- Tableau récapitulatif -->
       <div class="subsection">
         <h3 class="text-lg font-semibold mb-3">Compilation des applications</h3>
@@ -2427,11 +2598,11 @@ DÉBUT section_build_results
           </tbody>
         </table>
       </div>
-      
+
       <!-- Détails par application (accordéons) -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Détails par application</h3>
-        
+
         [POUR CHAQUE app]
           <div class="accordion-container mb-4">
             <button class="accordion" onclick="toggleAccordion('[app]-build-details')">
@@ -2440,7 +2611,7 @@ DÉBUT section_build_results
               </span>
               <span class="accordion-arrow">▼</span>
             </button>
-            
+
             <div id="[app]-build-details" class="accordion-content">
               <!-- Informations build -->
               <div class="grid grid-cols-2 gap-4 mb-4">
@@ -2461,7 +2632,7 @@ DÉBUT section_build_results
                   <div class="info-value">[files_count]</div>
                 </div>
               </div>
-              
+
               <!-- Erreurs si présentes -->
               [SI errors > 0]
                 <div class="errors-section">
@@ -2487,7 +2658,7 @@ DÉBUT section_build_results
                   </div>
                 </div>
               [FIN SI]
-              
+
               <!-- Warnings si présents -->
               [SI warnings > 0]
                 <div class="warnings-section mt-4">
@@ -2499,7 +2670,7 @@ DÉBUT section_build_results
                   </div>
                 </div>
               [FIN SI]
-              
+
               <!-- Log brut (pliable) -->
               <div class="log-section mt-4">
                 <button class="btn-sm" onclick="toggleLog('[app]-build-log')">
@@ -2513,11 +2684,11 @@ DÉBUT section_build_results
           </div>
         [FIN POUR]
       </div>
-      
+
       <!-- Résultats Linting -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">🔍 Linting (ESLint)</h3>
-        
+
         [SI lint configuré]
           <div class="lint-summary">
             <div class="grid grid-cols-4 gap-4">
@@ -2541,7 +2712,7 @@ DÉBUT section_build_results
               </div>
             </div>
           </div>
-          
+
           [SI lint_errors > 0 OU lint_warnings > 0]
             <div class="lint-details mt-4">
               <h4 class="text-md font-semibold mb-3">Règles les plus violées</h4>
@@ -2566,7 +2737,7 @@ DÉBUT section_build_results
                 </tbody>
               </table>
             </div>
-            
+
             [SI lint_errors > 0]
               <div class="mt-4">
                 <button class="btn btn-primary" onclick="fixLint()">
@@ -2575,7 +2746,7 @@ DÉBUT section_build_results
               </div>
             [FIN SI]
           [FIN SI]
-          
+
           <div class="mt-4">
             <button class="btn-sm" onclick="toggleLog('lint-log')">
               📋 Voir log complet ESLint
@@ -2598,12 +2769,13 @@ FIN section_build_results
 ##### 6.7.4 Résultats des tests
 
 **Pseudo-code** :
+
 ```
 DÉBUT section_test_results
   <section id="test-results" class="container mt-8">
     <div class="card">
       <h2 class="text-xl font-bold mb-4">🧪 Résultats des tests</h2>
-      
+
       <!-- Vue d'ensemble -->
       <div class="test-summary">
         <div class="grid grid-cols-5 gap-4">
@@ -2640,23 +2812,23 @@ DÉBUT section_test_results
           </div>
         </div>
       </div>
-      
+
       <!-- Barre de progression visuelle -->
       <div class="test-progress-bar mt-6">
-        <div class="progress-segment passed" 
+        <div class="progress-segment passed"
              style="width: [passed_percent]%"
              title="[passed_tests] réussis">
         </div>
-        <div class="progress-segment failed" 
+        <div class="progress-segment failed"
              style="width: [failed_percent]%"
              title="[failed_tests] échoués">
         </div>
-        <div class="progress-segment skipped" 
+        <div class="progress-segment skipped"
              style="width: [skipped_percent]%"
              title="[skipped_tests] skipped">
         </div>
       </div>
-      
+
       <!-- Métriques de performance -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">⏱️ Performances</h3>
@@ -2675,7 +2847,7 @@ DÉBUT section_test_results
           </div>
         </div>
       </div>
-      
+
       <!-- Résultats par framework -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Résultats par framework</h3>
@@ -2713,14 +2885,14 @@ DÉBUT section_test_results
           </tbody>
         </table>
       </div>
-      
+
       <!-- Tests échoués (PRIORITAIRE) -->
       [SI failed_tests > 0]
         <div class="subsection mt-6">
           <h3 class="text-lg font-semibold mb-3 text-red-600">
             ❌ Tests échoués ([failed_tests])
           </h3>
-          
+
           <div class="alert alert-error mb-4">
             <div class="alert-icon">⚠️</div>
             <div class="alert-content">
@@ -2731,7 +2903,7 @@ DÉBUT section_test_results
               </button>
             </div>
           </div>
-          
+
           <div class="failed-tests-list">
             [POUR CHAQUE test échoué (tous, pas de limite)]
               <div class="test-failure-card">
@@ -2742,24 +2914,24 @@ DÉBUT section_test_results
                   </div>
                   <span class="badge">[framework]</span>
                 </div>
-                
+
                 <div class="test-failure-meta">
                   <code class="text-sm">[file_path]:[line_number]</code>
                   <span class="test-duration">[duration]ms</span>
                 </div>
-                
+
                 <div class="test-failure-error">
                   <div class="error-label">Erreur:</div>
                   <pre class="error-message">[error_message]</pre>
                 </div>
-                
+
                 [SI stack_trace disponible]
                   <details class="test-failure-stack">
                     <summary>Stack trace</summary>
                     <pre class="stack-trace">[stack_trace]</pre>
                   </details>
                 [FIN SI]
-                
+
                 <div class="test-failure-actions mt-3">
                   <button class="btn-sm" onclick="openFile('[file_path]', [line_number])">
                     📝 Ouvrir dans l'éditeur
@@ -2773,7 +2945,7 @@ DÉBUT section_test_results
           </div>
         </div>
       [FIN SI]
-      
+
       <!-- Tests les plus lents -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">🐌 Tests les plus lents (Top 10)</h3>
@@ -2802,11 +2974,11 @@ DÉBUT section_test_results
           </tbody>
         </table>
       </div>
-      
+
       <!-- Inventaire complet des tests -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">📚 Inventaire complet</h3>
-        
+
         <div class="inventory-stats mb-4">
           <span class="stat-item">
             <strong>[total_suites]</strong> suites de tests
@@ -2821,7 +2993,7 @@ DÉBUT section_test_results
             <strong>[skipped_tests]</strong> tests skipped
           </span>
         </div>
-        
+
         <div class="accordion-container">
           <button class="accordion" onclick="toggleAccordion('test-inventory')">
             <span class="accordion-title">
@@ -2829,7 +3001,7 @@ DÉBUT section_test_results
             </span>
             <span class="accordion-arrow">▼</span>
           </button>
-          
+
           <div id="test-inventory" class="accordion-content">
             [POUR CHAQUE fichier de test]
               <div class="test-file-section">
@@ -2839,7 +3011,7 @@ DÉBUT section_test_results
                     [suite_count] suite(s), [test_count] test(s)
                   </span>
                 </div>
-                
+
                 <div class="test-file-content">
                   [POUR CHAQUE suite dans fichier]
                     <div class="test-suite">
@@ -2865,7 +3037,7 @@ DÉBUT section_test_results
           </div>
         </div>
       </div>
-      
+
       <!-- Logs des frameworks de test -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">📋 Logs d'exécution</h3>
@@ -2888,7 +3060,7 @@ DÉBUT section_emulators
   <section id="emulators" class="container mt-8">
     <div class="card">
       <h2 class="text-xl font-bold mb-4">🔥 Émulateurs Firebase</h2>
-      
+
       <!-- Statut global -->
       <div class="emulator-status-banner [status-class]">
         <div class="status-icon">[icon]</div>
@@ -2907,11 +3079,11 @@ DÉBUT section_emulators
           </div>
         </div>
       </div>
-      
+
       <!-- Configuration détectée -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Configuration</h3>
-        
+
         <table class="results-table">
           <thead>
             <tr>
@@ -2967,7 +3139,7 @@ DÉBUT section_emulators
           </tbody>
         </table>
       </div>
-      
+
       <!-- Conflits de ports si détectés -->
       [SI conflits de ports > 0]
         <div class="alert alert-error mt-6">
@@ -2977,19 +3149,19 @@ DÉBUT section_emulators
             <ul class="alert-list">
               [POUR CHAQUE conflit]
                 <li>
-                  Port <code>[port]</code> ([emulator_name]) occupé par 
+                  Port <code>[port]</code> ([emulator_name]) occupé par
                   <strong>[process_name]</strong> (PID [pid])
                 </li>
               [FIN POUR]
             </ul>
             <p class="mt-2">
-              Recommandation : Arrêter les processus conflictuels ou 
+              Recommandation : Arrêter les processus conflictuels ou
               modifier les ports dans firebase.json
             </p>
           </div>
         </div>
       [FIN SI]
-      
+
       <!-- Scripts package.json -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Scripts npm</h3>
@@ -3006,13 +3178,13 @@ DÉBUT section_emulators
           <div class="alert alert-info">
             <p>Aucun script d'émulateur détecté dans package.json</p>
             <p class="text-sm mt-1">
-              Suggestion : Ajouter un script 
+              Suggestion : Ajouter un script
               <code>"emulators:start": "firebase emulators:start"</code>
             </p>
           </div>
         [FIN SI]
       </div>
-      
+
       <!-- Données seed -->
       <div class="subsection mt-6">
         <h3 class="text-lg font-semibold mb-3">Données seed</h3>
@@ -3027,7 +3199,7 @@ DÉBUT section_emulators
               <div class="info-value">[seed_data_size] MB</div>
             </div>
           </div>
-          
+
           <div class="seed-details mt-4">
             <h4 class="text-md font-semibold mb-2">Contenu des données seed</h4>
             <div class="grid grid-cols-3 gap-4">
@@ -3058,7 +3230,7 @@ DÉBUT section_emulators
           <div class="alert alert-info">
             <p>Aucune donnée seed détectée</p>
             <p class="text-sm mt-1">
-              Pour créer des données seed : 
+              Pour créer des données seed :
               <code>firebase emulators:export ./firebase-export</code>RéessayerClaude n'a pas encore la capacité d'exécuter le code qu'il génère.RContinuer </p>
           </div>
         [FIN SI]
@@ -3067,7 +3239,7 @@ DÉBUT section_emulators
   [SI emulators_started]
     <div class="subsection mt-6">
       <h3 class="text-lg font-semibold mb-3">📋 Logs de démarrage</h3>
-      
+
       <div class="emulator-startup-info mb-4">
         <div class="grid grid-cols-3 gap-4">
           <div class="info-box">
@@ -3088,7 +3260,7 @@ DÉBUT section_emulators
           </div>
         </div>
       </div>
-      
+
       <div class="log-excerpt">
         <h4 class="text-sm font-semibold mb-2">Extrait des logs :</h4>
         <pre class="log-content">[extrait logs startup - lignes importantes]
@@ -3116,24 +3288,24 @@ Exemple :
       </div>
     </div>
   [FIN SI]
-  
+
   <!-- Connexions émulateurs depuis les apps -->
   <div class="subsection mt-6">
     <h3 class="text-lg font-semibold mb-3">🔗 Configuration des applications</h3>
     <p class="text-sm text-gray-600 mb-3">
       Vérification que les applications sont configurées pour utiliser les émulateurs
     </p>
-    
+
     [POUR CHAQUE app IN [admin, dashboard, public]]
       <div class="app-emulator-config mb-4">
         <h4 class="text-md font-semibold mb-2">[app_name]</h4>
-        
+
         [Chercher dans code source de l'app des patterns comme :]
         [- connectAuthEmulator()]
         [- connectFirestoreEmulator()]
         [- connectFunctionsEmulator()]
         [- connectStorageEmulator()]
-        
+
         [SI configuration émulateurs trouvée]
           <div class="config-found">
             <span class="status-indicator success"></span>
@@ -3141,7 +3313,7 @@ Exemple :
             <ul class="config-details text-sm mt-2">
               [POUR CHAQUE émulateur configuré dans le code]
                 <li>
-                  ✓ [emulator_name] → 
+                  ✓ [emulator_name] →
                   <code>localhost:[port]</code>
                 </li>
               [FIN POUR]
@@ -3159,7 +3331,7 @@ Exemple :
       </div>
     [FIN POUR]
   </div>
-  
+
   <!-- Actions rapides -->
   <div class="subsection mt-6">
     <h3 class="text-lg font-semibold mb-3">⚡ Actions rapides</h3>
@@ -3169,15 +3341,15 @@ Exemple :
           ▶️ Démarrer les émulateurs
         </button>
       [FIN SI]
-      
+
       <button class="btn" onclick="openEmulatorUI()">
         🌐 Ouvrir Emulator UI
       </button>
-      
+
       <button class="btn" onclick="exportEmulatorData()">
         💾 Exporter les données actuelles
       </button>
-      
+
       <button class="btn" onclick="clearEmulatorData()">
         🗑️ Effacer les données émulateurs
       </button>
@@ -3186,10 +3358,12 @@ Exemple :
 </div>
   </section>
 FIN section_emulators
-````
+```
+
 6.7.6 Configuration de déploiement
 **Pseudo-code** :
 DÉBUT section_deploy_config
+
   <section id="deploy-config" class="container mt-8">
     <div class="card">
       <h2 class="text-xl font-bold mb-4">🚀 Configuration de déploiement</h2>
@@ -3795,6 +3969,7 @@ FIN section_deploy_config
 PHASE 6.8 : Logs détaillés (accordéons)
 **Pseudo-code** :
 DÉBUT section_detailed_logs
+
   <section id="detailed-logs" class="container mt-8">
     <div class="card">
       <h2 class="text-xl font-bold mb-4">📋 Logs détaillés</h2>
@@ -4111,490 +4286,503 @@ Build errors:
 ${buildErrors}
 
 Provide:
+
 1. Root cause analysis
 2. Exact files to modify
 3. Code changes needed
 4. Explanation`;
-      
-      // Afficher modal avec le prompt
-      showGeminiPromptModal('Build Errors - ' + app, prompt, buildErrors);
-    }
-    
-    function fixTests() {
-      showNotification('Préparation de la requête pour Gemini...', 'info');
-      
-      const failedTests = extractFailedTests();
-      
-      const prompt = `Fix the following failed tests:
-      
+
+   // Afficher modal avec le prompt
+   showGeminiPromptModal('Build Errors - ' + app, prompt, buildErrors);
+   }
+
+   function fixTests() {
+   showNotification('Préparation de la requête pour Gemini...', 'info');
+
+   const failedTests = extractFailedTests();
+
+   const prompt = `Fix the following failed tests:
+
 ${failedTests}
 
 For each test:
+
 1. Analyze the error
 2. Identify if test or code issue
 3. Provide fix
 4. Explain`;
-      
-      showGeminiPromptModal('Failed Tests', prompt, failedTests);
-    }
-    
-    function fixLint() {
-      showNotification('Préparation de la requête pour Gemini...', 'info');
-      
-      const lintErrors = extractLintErrors();
-      
-      const prompt = `Fix the following ESLint errors:
-      
+
+   showGeminiPromptModal('Failed Tests', prompt, failedTests);
+   }
+
+   function fixLint() {
+   showNotification('Préparation de la requête pour Gemini...', 'info');
+
+   const lintErrors = extractLintErrors();
+
+   const prompt = `Fix the following ESLint errors:
+
 ${lintErrors}
 
 For each error:
+
 1. Identify file and line
 2. Explain rule violation
 3. Provide fixed code`;
-      
-      showGeminiPromptModal('Lint Errors', prompt, lintErrors);
-    }
-    
-    function fixDeployError() {
-      showNotification('Préparation de la requête pour Gemini...', 'info');
-      
-      const deployLog = document.getElementById('deploy-log').textContent;
-      
-      const prompt = `Analyze this Firebase deployment error:
-      
+
+   showGeminiPromptModal('Lint Errors', prompt, lintErrors);
+   }
+
+   function fixDeployError() {
+   showNotification('Préparation de la requête pour Gemini...', 'info');
+
+   const deployLog = document.getElementById('deploy-log').textContent;
+
+   const prompt = `Analyze this Firebase deployment error:
+
 ${deployLog}
 
 Provide:
-1. Root cause
-2. Configuration issue or auth issue?
-3. Step-by-step fix
-4. Corrected config if needed`;
-      
-      showGeminiPromptModal('Deploy Error', prompt, deployLog);
-    }
-    
-    function showGeminiPromptModal(title, prompt, context) {
-      // Créer modal
-      const modal = document.createElement('div');
-      modal.className = 'modal';
-      modal.innerHTML = `
-        <div class="modal-content">
-          <div class="modal-header">
-            <h3>🤖 Requête pour Gemini - ${title}</h3>
-            <button onclick="closeModal()" class="modal-close">×</button>
-          </div>
-          <div class="modal-body">
-            <p class="mb-3">
-              Copiez le prompt ci-dessous et envoyez-le à Gemini dans votre IDE :
-            </p>
-            <textarea id="gemini-prompt" class="prompt-textarea" readonly>${prompt}</textarea>
-            
-            <div class="mt-4">
-              <button class="btn btn-primary" onclick="copyPromptToClipboard()">
-                📋 Copier le prompt
-              </button>
-              <button class="btn" onclick="openInIDE()">
-                💻 Ouvrir dans l'IDE
-              </button>
-            </div>
-            
-            <div class="alert alert-info mt-4">
-              <p class="text-sm">
-                <strong>Instructions :</strong>
-                <br>1. Copiez le prompt
-                <br>2. Ouvrez Gemini dans VS Code
-                <br>3. Collez le prompt
-                <br>4. Appliquez les corrections suggérées
-              </p>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      document.body.appendChild(modal);
-      modal.style.display = 'flex';
-    }
-    
-    function copyPromptToClipboard() {
-      const textarea = document.getElementById('gemini-prompt');
-      textarea.select();
-      document.execCommand('copy');
-      showNotification('Prompt copié ! Envoyez-le à Gemini', 'success');
-    }
-    
-    // ====================================
-    // DÉPLOIEMENT
-    // ====================================
-    function executeDeploy() {
-      const selectedOption = document.querySelector('input[name="deploy-choice"]:checked').value;
-      
-      if (selectedOption === 'skip') {
-        showNotification('Déploiement ignoré', 'info');
-        return;
-      }
-      
-      showNotification('Préparation du déploiement...', 'info');
-      
-      // Construire commande
-      let command = 'firebase deploy';
-      
-      switch(selectedOption) {
-        case 'all':
-          command += ' --project=[project_id]';
-          break;
-        case 'admin':
-          command += ' --only hosting:admin-app-prod';
-          break;
-        case 'dashboard':
-          command += ' --only hosting:dashboard-app-prod';
-          break;
-        case 'public':
-          command += ' --only hosting:public-site-prod';
-          break;
-        case 'dataconnect':
-          command += ' --only dataconnect';
-          break;
-        case 'custom':
-          // Construire depuis checkboxes
-          const selected = getSelectedDeployComponents();
-          command += ' --only ' + selected.join(',');
-          break;
-      }
-      
-      // Afficher confirmation
-      if (confirm(`Exécuter la commande :\n${command}\n\nContinuer ?`)) {
-        showNotification('Exécution du déploiement...', 'info');
-        // Dans un vrai script, ceci déclencherait l'exécution bash
-        // Ici, afficher seulement la commande
-        showCommandToRun(command);
-      }
-    }
-    
-    function validateDeployPrerequisites() {
-      showNotification('Vérification des prérequis...', 'info');
-      
-      const checks = [
-        { name: 'Builds existent', status: checkBuildsExist() },
-        { name: 'Pas d\'erreurs critiques', status: checkNoCriticalErrors() },
-        { name: 'Firebase CLI authentifié', status: checkFirebaseAuth() }
-      ];
-      
-      const allPassed = checks.every(check => check.status);
-      
-      // Afficher résultats
-      showPrerequisitesModal(checks, allPassed);
-    }
-    
-    // ====================================
-    // UTILITAIRES
-    // ====================================
-    function showNotification(message, type = 'info') {
-      const notification = document.createElement('div');
-      notification.className = `notification notification-${type}`;
-      notification.textContent = message;
-      
-      document.body.appendChild(notification);
-      
-      setTimeout(() => {
-        notification.classList.add('show');
-      }, 10);
-      
-      setTimeout(() => {
-        notification.classList.remove('show');
-        setTimeout(() => notification.remove(), 300);
-      }, 3000);
-    }
-    
-    function copyToClipboard(text) {
-      navigator.clipboard.writeText(text).then(() => {
-        showNotification('Copié !', 'success');
-      });
-    }
-    
-    function openUrl(url) {
-      window.open(url, '_blank');
-    }
-    
-    function openFile(filepath, line) {
-      // Construct VS Code URL
-      const vscodeUrl = `vscode://file${filepath}:${line}`;
-      window.location.href = vscodeUrl;
-    }
-    
-    function refreshReport() {
-      if (confirm('Relancer l\'audit complet ? Cette action peut prendre quelques minutes.')) {
-        window.location.href = 'javascript:void(0)'; // Trigger reload
-        showNotification('Relancement de l\'audit...', 'info');
-      }
-    }
-    
-    function exportReport(format) {
-      if (format === 'html') {
-        // Clone et nettoyer le HTML
-        const clone = document.documentElement.cloneNode(true);
-        const html = clone.outerHTML;
-        const blob = new Blob([html], { type: 'text/html' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `titanic-health-report-${Date.now()}.html`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      } else if (format === 'pdf') {
-        window.print();
-      }
-    }
-    
-    function exportAllLogs(format) {
-      // Collecter tous les logs
-      const allLogs = {};
-      ['config', 'git', 'build', 'lint', 'test', 'emulators', 'deploy'].forEach(phase => {
-        const logElement = document.getElementById(phase + '-log-content');
-        if (logElement) {
-          allLogs[phase] = logElement.textContent;
+
+1.  Root cause
+2.  Configuration issue or auth issue?
+3.  Step-by-step fix
+4.  Corrected config if needed`;
+          showGeminiPromptModal('Deploy Error', prompt, deployLog);
         }
-      });
-      
-      if (format === 'json') {
-        const json = JSON.stringify({ ...reportData, logs: allLogs }, null, 2);
-        const blob = new Blob([json], { type: 'application/json' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `titanic-health-logs-${Date.now()}.json`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      } else {
-        let allLogsText = '';
-        Object.entries(allLogs).forEach(([phase, log]) => {
-          allLogsText += `\n\n========== ${phase.toUpperCase()} ==========\n\n${log}`;
-        });
-        
-        const blob = new Blob([allLogsText], { type: 'text/plain' });
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `titanic-health-all-logs-${Date.now()}.txt`;
-        a.click();
-        window.URL.revokeObjectURL(url);
-      }
-    }
-    
-    // ====================================
-    // INITIALISATION
-    // ====================================
-    document.addEventListener('DOMContentLoaded', function() {
-      console.log('🚢 Titanic Health Check Report loaded');
-      console.log('Report data:', reportData);
-      
-      // Ajouter smooth scroll
-      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-          e.preventDefault();
-          const target = document.querySelector(this.getAttribute('href'));
-          if (target) {
-            target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        function showGeminiPromptModal(title, prompt, context) {
+          // Créer modal
+          const modal = document.createElement('div');
+          modal.className = 'modal';
+          modal.innerHTML = `
+            <div class="modal-content">
+              <div class="modal-header">
+                <h3>🤖 Requête pour Gemini - ${title}</h3>
+                <button onclick="closeModal()" class="modal-close">×</button>
+              </div>
+              <div class="modal-body">
+                <p class="mb-3">
+                  Copiez le prompt ci-dessous et envoyez-le à Gemini dans votre IDE :
+                </p>
+                <textarea id="gemini-prompt" class="prompt-textarea" readonly>${prompt}</textarea>
+
+                <div class="mt-4">
+                  <button class="btn btn-primary" onclick="copyPromptToClipboard()">
+                    📋 Copier le prompt
+                  </button>
+                  <button class="btn" onclick="openInIDE()">
+                    💻 Ouvrir dans l'IDE
+                  </button>
+                </div>
+
+                <div class="alert alert-info mt-4">
+                  <p class="text-sm">
+                    <strong>Instructions :</strong>
+                    <br>1. Copiez le prompt
+                    <br>2. Ouvrez Gemini dans VS Code
+                    <br>3. Collez le prompt
+                    <br>4. Appliquez les corrections suggérées
+                  </p>
+                </div>
+              </div>
+            </div>
+          `;
+
+          document.body.appendChild(modal);
+          modal.style.display = 'flex';
+        }
+
+        function copyPromptToClipboard() {
+          const textarea = document.getElementById('gemini-prompt');
+          textarea.select();
+          document.execCommand('copy');
+          showNotification('Prompt copié ! Envoyez-le à Gemini', 'success');
+        }
+
+        // ====================================
+        // DÉPLOIEMENT
+        // ====================================
+        function executeDeploy() {
+          const selectedOption = document.querySelector('input[name="deploy-choice"]:checked').value;
+
+          if (selectedOption === 'skip') {
+            showNotification('Déploiement ignoré', 'info');
+            return;
+          }
+
+          showNotification('Préparation du déploiement...', 'info');
+
+          // Construire commande
+          let command = 'firebase deploy';
+
+          switch(selectedOption) {
+            case 'all':
+              command += ' --project=[project_id]';
+              break;
+            case 'admin':
+              command += ' --only hosting:admin-app-prod';
+              break;
+            case 'dashboard':
+              command += ' --only hosting:dashboard-app-prod';
+              break;
+            case 'public':
+              command += ' --only hosting:public-site-prod';
+              break;
+            case 'dataconnect':
+              command += ' --only dataconnect';
+              break;
+            case 'custom':
+              // Construire depuis checkboxes
+              const selected = getSelectedDeployComponents();
+              command += ' --only ' + selected.join(',');
+              break;
+          }
+
+          // Afficher confirmation
+          if (confirm(`Exécuter la commande :\n${command}\n\nContinuer ?`)) {
+            showNotification('Exécution du déploiement...', 'info');
+            // Dans un vrai script, ceci déclencherait l'exécution bash
+            // Ici, afficher seulement la commande
+            showCommandToRun(command);
+          }
+        }
+
+        function validateDeployPrerequisites() {
+          showNotification('Vérification des prérequis...', 'info');
+
+          const checks = [
+            { name: 'Builds existent', status: checkBuildsExist() },
+            { name: 'Pas d\'erreurs critiques', status: checkNoCriticalErrors() },
+            { name: 'Firebase CLI authentifié', status: checkFirebaseAuth() }
+          ];
+
+          const allPassed = checks.every(check => check.status);
+
+          // Afficher résultats
+          showPrerequisitesModal(checks, allPassed);
+        }
+
+        // ====================================
+        // UTILITAIRES
+        // ====================================
+        function showNotification(message, type = 'info') {
+          const notification = document.createElement('div');
+          notification.className = `notification notification-${type}`;
+          notification.textContent = message;
+
+          document.body.appendChild(notification);
+
+          setTimeout(() => {
+            notification.classList.add('show');
+          }, 10);
+
+          setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => notification.remove(), 300);
+          }, 3000);
+        }
+
+        function copyToClipboard(text) {
+          navigator.clipboard.writeText(text).then(() => {
+            showNotification('Copié !', 'success');
+          });
+        }
+
+        function openUrl(url) {
+          window.open(url, '_blank');
+        }
+
+        function openFile(filepath, line) {
+          // Construct VS Code URL
+          const vscodeUrl = `vscode://file${filepath}:${line}`;
+          window.location.href = vscodeUrl;
+        }
+
+        function refreshReport() {
+          if (confirm('Relancer l\'audit complet ? Cette action peut prendre quelques minutes.')) {
+            window.location.href = 'javascript:void(0)'; // Trigger reload
+            showNotification('Relancement de l\'audit...', 'info');
+          }
+        }
+
+        function exportReport(format) {
+          if (format === 'html') {
+            // Clone et nettoyer le HTML
+            const clone = document.documentElement.cloneNode(true);
+            const html = clone.outerHTML;
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `titanic-health-report-${Date.now()}.html`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+          } else if (format === 'pdf') {
+            window.print();
+          }
+        }
+
+        function exportAllLogs(format) {
+          // Collecter tous les logs
+          const allLogs = {};
+          ['config', 'git', 'build', 'lint', 'test', 'emulators', 'deploy'].forEach(phase => {
+            const logElement = document.getElementById(phase + '-log-content');
+            if (logElement) {
+              allLogs[phase] = logElement.textContent;
+            }
+          });
+
+          if (format === 'json') {
+            const json = JSON.stringify({ ...reportData, logs: allLogs }, null, 2);
+            const blob = new Blob([json], { type: 'application/json' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `titanic-health-logs-${Date.now()}.json`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+          } else {
+            let allLogsText = '';
+            Object.entries(allLogs).forEach(([phase, log]) => {
+              allLogsText += `\n\n========== ${phase.toUpperCase()} ==========\n\n${log}`;
+            });
+
+            const blob = new Blob([allLogsText], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `titanic-health-all-logs-${Date.now()}.txt`;
+            a.click();
+            window.URL.revokeObjectURL(url);
+          }
+        }
+
+        // ====================================
+        // INITIALISATION
+        // ====================================
+        document.addEventListener('DOMContentLoaded', function() {
+          console.log('🚢 Titanic Health Check Report loaded');
+          console.log('Report data:', reportData);
+
+          // Ajouter smooth scroll
+          document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+              e.preventDefault();
+              const target = document.querySelector(this.getAttribute('href'));
+              if (target) {
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }
+            });
+          });
+
+          // Auto-expand erreurs critiques
+          if (reportData.globalStatus === 'CRITICAL') {
+            document.querySelectorAll('.status-error').forEach(elem => {
+              const accordion = elem.closest('.accordion-container');
+              if (accordion) {
+                const button = accordion.querySelector('.accordion');
+                button.click();
+              }
+            });
           }
         });
-      });
-      
-      // Auto-expand erreurs critiques
-      if (reportData.globalStatus === 'CRITICAL') {
-        document.querySelectorAll('.status-error').forEach(elem => {
-          const accordion = elem.closest('.accordion-container');
-          if (accordion) {
-            const button = accordion.querySelector('.accordion');
-            button.click();
-          }
-        });
-      }
-    });
-  </script>
-FIN generation_javascript
+      </script>
+    FIN generation_javascript
 
 PHASE 6.11 : Écriture finale du fichier HTML
 **Pseudo-code** :
 DÉBUT ecriture_fichier_html
-  - Définir chemin de sortie :
-    output_path = "[project_root]/apps/admin/reports/titanic-health.html"
-    OU output_path = "[project_root]/superdev/reports/titanic-health.html"
-  
-  - Créer répertoire parent si nécessaire :
-    mkdir -p $(dirname $output_path)
-  
-  - Assembler le HTML complet :
-    * Concaténer toutes les sections générées (6.2 à 6.10)
-    * Injecter toutes les variables dynamiques
-    * Remplacer tous les placeholders [variable] par valeurs réelles
-  
-  - Écrire dans fichier :
-    echo "$html_content" > $output_path
-  
-  - Vérifier écriture réussie :
-    SI fichier existe ET taille > 0 ALORS
-      html_generated = true
-      Afficher : "✓ Rapport HTML généré : $output_path"
-    SINON
-      html_generated = false
-      STATUS global = "ERROR"
-      Afficher : "✗ Échec génération HTML"
-      RETOUR code erreur 1
-    FIN SI
-  
-  - Calculer taille du rapport :
-    report_size = $(stat -f%z "$output_path")  # macOS
-    report_size_mb = $(echo "scale=2; $report_size / 1048576" | bc)
-    
-  - Créer copie horodatée (historique) :
-    cp "$output_path" "$output_path.$(date +%Y%m%d-%H%M%S).html"
-  
-  - Afficher résumé :
-    echo "========================================="
-    echo "🚢 TITANIC HEALTH CHECK - TERMINÉ"
-    echo "========================================="
-    echo "Statut global : $GLOBAL_STATUS"
-    echo "Score de santé : $health_score%"
-    echo "Durée totale : $duree_totale"
-    echo "Rapport généré : $output_path"
-    echo "Taille : $report_size_mb MB"
-    echo "========================================="
-  
-  - Proposer d'ouvrir le rapport :
-    echo ""
-    read -p "Ouvrir le rapport dans le navigateur ? (y/n) " open_browser
-    
-    SI open_browser == "y" OU open_browser == "Y" ALORS
-      open "$output_path"  # macOS
-      Afficher : "✓ Rapport ouvert dans le navigateur par défaut"
-    FIN SI
-FIN ecriture_fichier_html
-DÉBUT execution_globale
+
+- Définir chemin de sortie :
+  output_path = "[project_root]/apps/admin/reports/titanic-health.html"
+  OU output_path = "[project_root]/superdev/reports/titanic-health.html"
+
+- Créer répertoire parent si nécessaire :
+  mkdir -p $(dirname $output_path)
+
+- Assembler le HTML complet :
+
+  - Concaténer toutes les sections générées (6.2 à 6.10)
+  - Injecter toutes les variables dynamiques
+  - Remplacer tous les placeholders [variable] par valeurs réelles
+
+- Écrire dans fichier :
+  echo "$html_content" > $output_path
+
+- Vérifier écriture réussie :
+  SI fichier existe ET taille > 0 ALORS
+  html_generated = true
+  Afficher : "✓ Rapport HTML généré : $output_path"
+  SINON
+  html_generated = false
+  STATUS global = "ERROR"
+  Afficher : "✗ Échec génération HTML"
+  RETOUR code erreur 1
+  FIN SI
+
+- Calculer taille du rapport :
+  report_size = $(stat -f%z "$output_path") # macOS
+  report_size_mb = $(echo "scale=2; $report_size / 1048576" | bc)
+- Créer copie horodatée (historique) :
+  cp "$output_path" "$output_path.$(date +%Y%m%d-%H%M%S).html"
+
+- Afficher résumé :
+  echo "========================================="
+  echo "🚢 TITANIC HEALTH CHECK - TERMINÉ"
+  echo "========================================="
+  echo "Statut global : $GLOBAL_STATUS"
+  echo "Score de santé : $health_score%"
+  echo "Durée totale : $duree_totale"
+  echo "Rapport généré : $output_path"
+  echo "Taille : $report_size_mb MB"
+  echo "========================================="
+
+- Proposer d'ouvrir le rapport :
+  echo ""
+  read -p "Ouvrir le rapport dans le navigateur ? (y/n) " open_browser
+      SI open_browser == "y" OU open_browser == "Y" ALORS
+        open "$output_path"  # macOS
+        Afficher : "✓ Rapport ouvert dans le navigateur par défaut"
+      FIN SI
+  FIN ecriture_fichier_html
+  DÉBUT execution_globale
   #!/bin/bash
-  set -euo pipefail  # Exit on error, undefined var, pipe failure
-  
-  # Trap pour cleanup
-  trap cleanup EXIT INT TERM
-  
-  function cleanup() {
-    echo "Nettoyage..."
-    # Arrêter émulateurs si démarrés
-    if [ ! -z "$EMULATOR_PID" ]; then
-      kill $EMULATOR_PID 2>/dev/null || true
-    fi
-    # Supprimer fichiers temporaires
-    rm -f /tmp/titanic-health-*.log 2>/dev/null || true
-  }
-  
-  # Afficher bannière
-  echo "========================================"
-  echo "🚢 TITANIC HEALTH CHECK"
-  echo "   Firebase Cloud Audit Tool"
-  echo "========================================"
-  echo ""
-  
-  # PHASE 0 : Initialisation
-  echo "[1/7] 🔧 Initialisation..."
-  TIMESTAMP_START=$(date +%s)
+  set -euo pipefail # Exit on error, undefined var, pipe failure
+
+# Trap pour cleanup
+
+trap cleanup EXIT INT TERM
+
+function cleanup() {
+echo "Nettoyage..." # Arrêter émulateurs si démarrés
+if [ ! -z "$EMULATOR_PID" ]; then
+kill $EMULATOR_PID 2>/dev/null || true
+fi # Supprimer fichiers temporaires
+rm -f /tmp/titanic-health-\*.log 2>/dev/null || true
+}
+
+# Afficher bannière
+
+echo "========================================"
+echo "🚢 TITANIC HEALTH CHECK"
+echo " Firebase Cloud Audit Tool"
+echo "========================================"
+echo ""
+
+# PHASE 0 : Initialisation
+
+echo "[1/7] 🔧 Initialisation..."
+TIMESTAMP_START=$(date +%s)
   TIMESTAMP_ISO=$(date +"%Y-%m-%dT%H:%M:%S%z")
-  GLOBAL_STATUS="OK"
-  PROJECT_ROOT=$(find_project_root)
+GLOBAL_STATUS="OK"
+PROJECT_ROOT=$(find_project_root)
   cd "$PROJECT_ROOT"
-  
-  # PHASE 1 : Configuration Firebase
-  echo "[2/7] ⚙️  Vérification configuration Firebase..."
-  check_firebase_config
-  validate_config_coherence
-  
-  # PHASE 1.5 : État Git
-  echo "[3/7] 📚 Analyse état Git..."
-  check_git_status
-  extract_git_history
-  
-  # PHASE 2 : Build Check
-  echo "[4/7] 🔨 Vérification des builds..."
-  detect_turborepo_config
-  build_all_apps
-  run_lint
-  
-  # Si erreurs critiques de build
-  if [ "$BUILD_FAILED" = true ]; then
-    echo ""
-    echo "❌ Des erreurs de build ont été détectées."
-    read -p "Voulez-vous appeler Gemini pour les corriger ? (y/n) " fix_build
-    if [ "$fix_build" = "y" ]; then
-      propose_gemini_fix "build"
-    fi
-  fi
-  
-  # PHASE 3 : Tests
-  echo "[5/7] 🧪 Exécution des tests..."
-  detect_test_frameworks
-  run_all_tests
-  
-  # Si tests échoués
-  if [ "$TESTS_FAILED" = true ]; then
-    echo ""
-    echo "❌ Des tests ont échoué."
-    read -p "Voulez-vous appeler Gemini pour les corriger ? (y/n) " fix_tests
-    if [ "$fix_tests" = "y" ]; then
-      propose_gemini_fix "tests"
-    fi
-  fi
-  
-  # PHASE 4 : Émulateurs
-  echo "[6/7] 🔥 Vérification émulateurs Firebase..."
-  detect_emulators_config
-  echo ""
-  read -p "Démarrer les émulateurs pour vérification ? (y/n) " start_emu
-  if [ "$start_emu" = "y" ]; then
-    start_emulators
-    check_emulators_health
-  fi
-  
-  # PHASE 5 : Deploy Config
-  echo "[7/7] 🚀 Analyse configuration déploiement..."
-  detect_data_connect
-  detect_static_deploy
-  detect_ssr_deploy
-  
-  # Proposer déploiement
-  echo ""
-  echo "========================================="
-  echo "Configuration déploiement détectée."
-  echo "Voulez-vous déployer maintenant ?"
-  echo "========================================="
-  echo "[0] Tout déployer"
-  echo "[1] Admin uniquement"
-  echo "[2] Dashboard uniquement"
-  echo "[3] Public uniquement"
-  echo "[4] Data Connect uniquement"
-  echo "[5] Personnalisé"
-  echo "[6] Passer (ne pas déployer)"
-  echo ""
-  read -p "Choix : " deploy_choice
-case $deploy_choice in
-0) deploy_all ;;
-1) deploy_app "admin" ;;
-2) deploy_app "dashboard" ;;
-3) deploy_app "public" ;;
-4) deploy_dataconnect ;;
-5) deploy_custom ;;
-6) echo "Déploiement ignoré" ;;
-*) echo "Choix invalide, déploiement ignoré" ;;
-esac
-PHASE 6 : Génération rapport HTML
+
+# PHASE 1 : Configuration Firebase
+
+echo "[2/7] ⚙️ Vérification configuration Firebase..."
+check_firebase_config
+validate_config_coherence
+
+# PHASE 1.5 : État Git
+
+echo "[3/7] 📚 Analyse état Git..."
+check_git_status
+extract_git_history
+
+# PHASE 2 : Build Check
+
+echo "[4/7] 🔨 Vérification des builds..."
+detect_turborepo_config
+build_all_apps
+run_lint
+
+# Si erreurs critiques de build
+
+if [ "$BUILD_FAILED" = true ]; then
 echo ""
-echo "📊 Génération du rapport HTML..."
-calculate_global_status
-generate_html_report
-Fin
-TIMESTAMP_END=$(date +%s)
+echo "❌ Des erreurs de build ont été détectées."
+read -p "Voulez-vous appeler Gemini pour les corriger ? (y/n) " fix_build
+if [ "$fix_build" = "y" ]; then
+propose_gemini_fix "build"
+fi
+fi
+
+# PHASE 3 : Tests
+
+echo "[5/7] 🧪 Exécution des tests..."
+detect_test_frameworks
+run_all_tests
+
+# Si tests échoués
+
+if [ "$TESTS_FAILED" = true ]; then
+echo ""
+echo "❌ Des tests ont échoué."
+read -p "Voulez-vous appeler Gemini pour les corriger ? (y/n) " fix_tests
+if [ "$fix_tests" = "y" ]; then
+propose_gemini_fix "tests"
+fi
+fi
+
+# PHASE 4 : Émulateurs
+
+echo "[6/7] 🔥 Vérification émulateurs Firebase..."
+detect_emulators_config
+echo ""
+read -p "Démarrer les émulateurs pour vérification ? (y/n) " start_emu
+if [ "$start_emu" = "y" ]; then
+start_emulators
+check_emulators_health
+fi
+
+# PHASE 5 : Deploy Config
+
+echo "[7/7] 🚀 Analyse configuration déploiement..."
+detect_data_connect
+detect_static_deploy
+detect_ssr_deploy
+
+# Proposer déploiement
+
+echo ""
+echo "========================================="
+echo "Configuration déploiement détectée."
+echo "Voulez-vous déployer maintenant ?"
+echo "========================================="
+echo "[0] Tout déployer"
+echo "[1] Admin uniquement"
+echo "[2] Dashboard uniquement"
+echo "[3] Public uniquement"
+echo "[4] Data Connect uniquement"
+echo "[5] Personnalisé"
+echo "[6] Passer (ne pas déployer)"
+echo ""
+read -p "Choix : " deploy_choice
+case $deploy_choice in 0) deploy_all ;;
+
+1. deploy_app "admin" ;;
+2. deploy_app "dashboard" ;;
+3. deploy_app "public" ;;
+4. deploy_dataconnect ;;
+5. deploy_custom ;;
+6. echo "Déploiement ignoré" ;;
+   \*) echo "Choix invalide, déploiement ignoré" ;;
+   esac
+   PHASE 6 : Génération rapport HTML
+   echo ""
+   echo "📊 Génération du rapport HTML..."
+   calculate_global_status
+   generate_html_report
+   Fin
+   TIMESTAMP_END=$(date +%s)
 DURATION=$((TIMESTAMP_END - TIMESTAMP_START))
-echo ""
-echo "========================================="
-echo "✅ AUDIT TERMINÉ"
-echo "========================================="
-echo "Statut : $GLOBAL_STATUS"
+   echo ""
+   echo "========================================="
+   echo "✅ AUDIT TERMINÉ"
+   echo "========================================="
+   echo "Statut : $GLOBAL_STATUS"
 echo "Score : $HEALTH_SCORE%"
 echo "Durée : ${DURATION}s"
 echo "Rapport : $REPORT_PATH"
@@ -4603,21 +4791,22 @@ Ouvrir rapport
 echo ""
 read -p "Ouvrir le rapport dans le navigateur ? (y/n) " open_report
 if [ "$open_report" = "y" ]; then
-open "$REPORT_PATH"
-fi
-exit 0
-FIN execution_globale
+   open "$REPORT_PATH"
+   fi
+   exit 0
+   FIN execution_globale
 
 ### 7.2 Gestion des erreurs et validations
 
 **Pseudo-code** :
+
 ```
 DÉBUT gestion_erreurs
   # Validation à chaque phase
   function validate_phase() {
     local phase_name=$1
     local phase_status=$2
-    
+
     case $phase_status in
       "SUCCESS")
         echo "✓ $phase_name : SUCCESS"
@@ -4629,11 +4818,11 @@ DÉBUT gestion_erreurs
       "ERROR")
         echo "✗ $phase_name : ERROR"
         GLOBAL_STATUS="ERROR"
-        
+
         # Demander si continuer
         echo ""
         read -p "Continuer malgré l'erreur ? (y/n) " continue_on_error
-        
+
         if [ "$continue_on_error" != "y" ]; then
           echo "Arrêt de l'audit."
           generate_partial_report "$phase_name"
@@ -4642,39 +4831,39 @@ DÉBUT gestion_erreurs
         ;;
     esac
   }
-  
+
   # Génération rapport partiel en cas d'arrêt prématuré
   function generate_partial_report() {
     local failed_phase=$1
-    
+
     echo "Génération d'un rapport partiel..."
-    
+
     # Générer HTML avec sections complétées uniquement
     # Marquer phase échouée
     # Inclure logs jusqu'au point d'échec
-    
+
     REPORT_PATH="$PROJECT_ROOT/apps/admin/reports/titanic-health-PARTIAL.html"
     generate_html_report
-    
+
     echo "Rapport partiel généré : $REPORT_PATH"
   }
-  
+
   # Vérification des dépendances
   function check_dependencies() {
     local missing_deps=()
-    
+
     # Commandes obligatoires
     command -v node >/dev/null 2>&1 || missing_deps+=("node")
     command -v npm >/dev/null 2>&1 || missing_deps+=("npm")
     command -v git >/dev/null 2>&1 || missing_deps+=("git")
     command -v firebase >/dev/null 2>&1 || missing_deps+=("firebase-tools")
-    
+
     # Commandes optionnelles mais recommandées
     if ! command -v jq >/dev/null 2>&1; then
       echo "⚠ Warning: jq non installé (recommandé pour parsing JSON)"
       echo "  Installation: brew install jq"
     fi
-    
+
     if [ ${#missing_deps[@]} -gt 0 ]; then
       echo "❌ Dépendances manquantes : ${missing_deps[*]}"
       echo ""
@@ -4692,19 +4881,19 @@ DÉBUT gestion_erreurs
       exit 1
     fi
   }
-  
+
   # Vérification structure projet
   function validate_project_structure() {
     if [ ! -f "package.json" ]; then
       echo "❌ package.json non trouvé. Êtes-vous à la racine du projet ?"
       exit 1
     fi
-    
+
     if [ ! -d "apps" ]; then
       echo "❌ Répertoire apps/ non trouvé. Structure Turborepo invalide ?"
       exit 1
     fi
-    
+
     # Vérifier présence des 3 apps
     local required_apps=("admin" "dashboard" "public")
     for app in "${required_apps[@]}"; do
@@ -4713,13 +4902,13 @@ DÉBUT gestion_erreurs
       fi
     done
   }
-  
+
   # Timeout pour commandes longues
   function run_with_timeout() {
     local timeout=$1
     shift
     local command="$@"
-    
+
     # Utiliser timeout command (GNU coreutils)
     # Sur macOS, utiliser gtimeout (brew install coreutils)
     if command -v gtimeout >/dev/null 2>&1; then
@@ -4741,21 +4930,22 @@ FIN gestion_erreurs
 ### 7.3 Interactions avec Gemini
 
 **Pseudo-code** :
+
 ```
 DÉBUT interactions_gemini
   # Fonction générique pour proposer correction Gemini
   function propose_gemini_fix() {
     local fix_type=$1  # "build", "tests", "lint", "deploy"
-    
+
     echo ""
     echo "========================================="
     echo "🤖 CORRECTION AVEC GEMINI"
     echo "========================================="
-    
+
     # Préparer le contexte
     local context=""
     local prompt=""
-    
+
     case $fix_type in
       "build")
         context=$(extract_build_errors)
@@ -4772,7 +4962,7 @@ Analyze and provide:
 
 Project structure: Turborepo with apps (admin, dashboard, public)"
         ;;
-        
+
       "tests")
         context=$(extract_failed_tests)
         prompt="Fix the following failed tests:
@@ -4786,7 +4976,7 @@ For each test:
 3. Provide corrected code
 4. Explain the issue"
         ;;
-        
+
       "lint")
         context=$(extract_lint_errors)
         prompt="Fix the following ESLint errors:
@@ -4799,7 +4989,7 @@ For each error:
 2. Explain the rule violation
 3. Provide corrected code snippet"
         ;;
-        
+
       "deploy")
         context=$(cat /tmp/deploy-output.log)
         prompt="Analyze this Firebase deployment error:
@@ -4814,11 +5004,11 @@ Provide:
 4. Corrected configuration if needed"
         ;;
     esac
-    
+
     # Sauvegarder prompt dans fichier
     local prompt_file="/tmp/gemini-prompt-$fix_type.txt"
     echo "$prompt" > "$prompt_file"
-    
+
     echo ""
     echo "Prompt préparé pour Gemini :"
     echo "----------------------------"
@@ -4835,20 +5025,20 @@ Provide:
     echo "4. Appliquez les corrections suggérées"
     echo "5. Re-lancez l'audit pour vérifier"
     echo ""
-    
+
     # Copier dans clipboard si pbcopy disponible (macOS)
     if command -v pbcopy >/dev/null 2>&1; then
       cat "$prompt_file" | pbcopy
       echo "✓ Prompt copié dans le presse-papiers !"
       echo ""
     fi
-    
-    read -p "Appuyez sur Entrée quand vous avez appliqué les corrections..." 
-    
+
+    read -p "Appuyez sur Entrée quand vous avez appliqué les corrections..."
+
     # Proposer de relancer la phase concernée
     echo ""
     read -p "Relancer la vérification de $fix_type ? (y/n) " rerun
-    
+
     if [ "$rerun" = "y" ]; then
       case $fix_type in
         "build")
@@ -4867,11 +5057,11 @@ Provide:
       esac
     fi
   }
-  
+
   # Extraction contexte pour Gemini
   function extract_build_errors() {
     local errors=""
-    
+
     for app in admin dashboard public; do
       if [ -f "/tmp/build-$app.log" ]; then
         local app_errors=$(grep -i "error" "/tmp/build-$app.log" | head -n 20)
@@ -4883,32 +5073,32 @@ $app_errors
         fi
       fi
     done
-    
+
     echo "$errors"
   }
-  
+
   function extract_failed_tests() {
     local failures=""
-    
+
     # Parser les résultats de tests (dépend du framework)
     # Jest format
     if [ -f "/tmp/jest-results.json" ]; then
       # Parser JSON avec jq si disponible
       if command -v jq >/dev/null 2>&1; then
-        failures=$(jq -r '.testResults[] | select(.status == "failed") | 
-          "File: \(.name)\n" + 
-          (.assertionResults[] | select(.status == "failed") | 
-          "  Test: \(.fullName)\n  Error: \(.failureMessages[0])\n")' 
+        failures=$(jq -r '.testResults[] | select(.status == "failed") |
+          "File: \(.name)\n" +
+          (.assertionResults[] | select(.status == "failed") |
+          "  Test: \(.fullName)\n  Error: \(.failureMessages[0])\n")'
           /tmp/jest-results.json)
       else
         # Fallback : extraire du log texte
         failures=$(grep -A 5 "FAIL" /tmp/test-output.log)
       fi
     fi
-    
+
     echo "$failures"
   }
-  
+
   function extract_lint_errors() {
     if [ -f "/tmp/lint.log" ]; then
       # Extraire seulement les erreurs (pas warnings)
@@ -4925,46 +5115,47 @@ FIN interactions_gemini
 ### 8.1 Vérifications optionnelles avancées
 
 **Pseudo-code** :
+
 ```
 DÉBUT verifications_avancees
   # Ces vérifications peuvent être ajoutées selon besoins
-  
+
   # 1. Cohérence des versions de dépendances
   function check_dependency_versions() {
     echo "Vérification cohérence des versions..."
-    
+
     # Vérifier que toutes les apps utilisent les mêmes versions
     # de dépendances critiques (react, firebase, etc.)
-    
+
     local critical_deps=("react" "firebase" "next" "typescript")
-    
+
     for dep in "${critical_deps[@]}"; do
       local versions=()
-      
+
       for app in admin dashboard public; do
-        local version=$(jq -r ".dependencies.\"$dep\" // .devDependencies.\"$dep\" // \"not-found\"" 
+        local version=$(jq -r ".dependencies.\"$dep\" // .devDependencies.\"$dep\" // \"not-found\""
           "apps/$app/package.json")
         versions+=("$app:$version")
       done
-      
+
       # Comparer versions
       local unique_versions=$(printf '%s\n' "${versions[@]}" | sort -u | wc -l)
-      
+
       if [ $unique_versions -gt 1 ]; then
         echo "⚠ Warning: Versions divergentes pour $dep"
         printf '%s\n' "${versions[@]}"
       fi
     done
   }
-  
+
   # 2. Vérification des secrets manquants
   function check_missing_secrets() {
     echo "Vérification des secrets Firebase..."
-    
+
     # Lister les secrets référencés dans apphosting.yaml
-    local secret_refs=$(find . -name "apphosting.yaml" -exec grep "secret:" {} \; | 
+    local secret_refs=$(find . -name "apphosting.yaml" -exec grep "secret:" {} \; |
       sed 's/.*secret: //' | sort -u)
-    
+
     if [ ! -z "$secret_refs" ]; then
       echo "Secrets requis détectés :"
       echo "$secret_refs"
@@ -4973,23 +5164,23 @@ DÉBUT verifications_avancees
       echo "  → https://console.firebase.google.com/project/$PROJECT_ID/settings/secrets"
     fi
   }
-  
+
   # 3. Analyse de sécurité basique des rules
   function analyze_security_rules() {
     echo "Analyse des règles de sécurité..."
-    
+
     # Firestore rules
     if [ -f "firestore.rules" ]; then
       # Vérifier patterns dangereux
       if grep -q "allow read, write: if true" firestore.rules; then
         echo "❌ CRITIQUE : Règles Firestore trop permissives (allow if true)"
       fi
-      
+
       if ! grep -q "allow read" firestore.rules; then
         echo "⚠ Warning : Aucune règle de lecture détectée dans firestore.rules"
       fi
     fi
-    
+
     # Storage rules
     if [ -f "storage.rules" ]; then
       if grep -q "allow read, write: if true" storage.rules; then
@@ -4997,14 +5188,14 @@ DÉBUT verifications_avancees
       fi
     fi
   }
-  
+
   # 4. Vérification taille des bundles
   function check_bundle_sizes() {
     echo "Vérification taille des bundles..."
-    
+
     for app in admin dashboard public; do
       local build_dir=""
-      
+
       # Détecter répertoire de build
       if [ -d "apps/$app/out" ]; then
         build_dir="apps/$app/out"
@@ -5013,15 +5204,15 @@ DÉBUT verifications_avancees
       elif [ -d "apps/$app/build" ]; then
         build_dir="apps/$app/build"
       fi
-      
+
       if [ ! -z "$build_dir" ]; then
         # Trouver plus gros fichiers JS
-        local largest_js=$(find "$build_dir" -name "*.js" -type f -exec ls -lh {} \; | 
+        local largest_js=$(find "$build_dir" -name "*.js" -type f -exec ls -lh {} \; |
           sort -k5 -hr | head -n 5)
-        
+
         echo "📦 $app - Plus gros bundles JS :"
         echo "$largest_js"
-        
+
         # Warning si bundle > 500KB
         local large_bundles=$(find "$build_dir" -name "*.js" -type f -size +500k)
         if [ ! -z "$large_bundles" ]; then
@@ -5030,48 +5221,48 @@ DÉBUT verifications_avancees
       fi
     done
   }
-  
+
   # 5. Ports d'émulateurs déjà utilisés
   function check_port_availability() {
     local ports=(9099 8080 5001 9199 5000 4000)  # Ports Firebase par défaut
     local conflicts=()
-    
+
     for port in "${ports[@]}"; do
       if lsof -i :$port >/dev/null 2>&1; then
         local process=$(lsof -i :$port | tail -n 1 | awk '{print $1 " (PID " $2 ")"}')
         conflicts+=("Port $port occupé par $process")
       fi
     done
-    
+
     if [ ${#conflicts[@]} -gt 0 ]; then
       echo "⚠ Conflits de ports détectés :"
       printf '%s\n' "${conflicts[@]}"
       return 1
     fi
-    
+
     return 0
   }
-  
+
   # 6. Vérification compatibilité Node version
   function check_node_version() {
     local current_version=$(node -v | sed 's/v//')
     local required_version="18.0.0"
-    
+
     # Comparer versions (simpliste)
     local current_major=$(echo $current_version | cut -d. -f1)
     local required_major=$(echo $required_version | cut -d. -f1)
-    
+
     if [ $current_major -lt $required_major ]; then
       echo "⚠ Warning: Node.js $current_version détecté"
       echo "  Version recommandée : >=$required_version"
       echo "  Certaines fonctionnalités Firebase requièrent Node 18+"
     fi
   }
-  
+
   # 7. Détection de fichiers sensibles commités
   function check_committed_secrets() {
     echo "Recherche de secrets potentiellement commités..."
-    
+
     # Patterns de fichiers sensibles
     local sensitive_patterns=(
       "*.env.local"
@@ -5081,16 +5272,16 @@ DÉBUT verifications_avancees
       "*serviceAccountKey.json"
       "*firebase-adminsdk*.json"
     )
-    
+
     local found_secrets=()
-    
+
     for pattern in "${sensitive_patterns[@]}"; do
       local files=$(git ls-files "$pattern" 2>/dev/null)
       if [ ! -z "$files" ]; then
         found_secrets+=("$files")
       fi
     done
-    
+
     if [ ${#found_secrets[@]} -gt 0 ]; then
       echo "❌ ALERTE SÉCURITÉ : Fichiers sensibles trouvés dans Git :"
       printf '%s\n' "${found_secrets[@]}"
@@ -5101,14 +5292,14 @@ DÉBUT verifications_avancees
       echo "  3. Regénérer les secrets compromis"
     fi
   }
-  
+
   # 8. Vérification .gitignore
   function check_gitignore() {
     if [ ! -f ".gitignore" ]; then
       echo "⚠ Warning: .gitignore manquant à la racine"
       return
     fi
-    
+
     # Patterns importants qui devraient être ignorés
     local required_patterns=(
       "node_modules"
@@ -5118,25 +5309,25 @@ DÉBUT verifications_avancees
       ".firebase"
       "firebase-debug.log"
     )
-    
+
     local missing_patterns=()
-    
+
     for pattern in "${required_patterns[@]}"; do
       if ! grep -q "^$pattern" .gitignore; then
         missing_patterns+=("$pattern")
       fi
     done
-    
+
     if [ ${#missing_patterns[@]} -gt 0 ]; then
       echo "⚠ Patterns manquants dans .gitignore :"
       printf '%s\n' "${missing_patterns[@]}"
     fi
   }
-  
+
   # 9. Vérification des scripts package.json
   function check_npm_scripts() {
     echo "Vérification des scripts npm..."
-    
+
     # Scripts recommandés
     local recommended_scripts=(
       "dev"
@@ -5144,22 +5335,22 @@ DÉBUT verifications_avancees
       "test"
       "lint"
     )
-    
+
     for script in "${recommended_scripts[@]}"; do
       if ! jq -e ".scripts.$script" package.json >/dev/null 2>&1; then
         echo "⚠ Script '$script' non trouvé dans package.json racine"
       fi
     done
   }
-  
+
   # 10. Analyse des imports circulaires (basique)
   function check_circular_dependencies() {
     echo "Détection imports circulaires (analyse basique)..."
-    
+
     # Utiliser madge si installé
     if command -v madge >/dev/null 2>&1; then
       local circular=$(madge --circular --extensions ts,tsx apps/)
-      
+
       if [ ! -z "$circular" ]; then
         echo "⚠ Imports circulaires détectés :"
         echo "$circular"
@@ -5176,6 +5367,7 @@ FIN verifications_avancees
 ### 8.2 Cas limites et gestion
 
 **Pseudo-code** :
+
 ```
 DÉBUT gestion_cas_limites
   # Cas 1 : Projet sans Git
@@ -5184,13 +5376,13 @@ DÉBUT gestion_cas_limites
     echo "La phase Git sera ignorée"
     GIT_AVAILABLE=false
   fi
-  
+
   # Cas 2 : Firebase non initialisé
   if [ ! -f "firebase.json" ] && [ ! -f ".firebaserc" ]; then
     echo "⚠ Projet Firebase non initialisé"
     echo "Voulez-vous initialiser Firebase maintenant ? (y/n)"
     read init_firebase
-    
+
     if [ "$init_firebase" = "y" ]; then
       firebase init
     else
@@ -5198,20 +5390,20 @@ DÉBUT gestion_cas_limites
       FIREBASE_CONFIGURED=false
     fi
   fi
-  
+
   # Cas 3 : Turborepo non configuré
   if [ ! -f "turbo.json" ]; then
     echo "⚠ turbo.json non trouvé"
     echo "Le projet utilise-t-il Turborepo ? (y/n)"
     read uses_turbo
-    
+
     if [ "$uses_turbo" != "y" ]; then
       echo "Adaptation du script pour monorepo standard..."
       USES_TURBOREPO=false
       # Adapter commandes build
     fi
   fi
-  
+
   # Cas 4 : Aucune app trouvée
   local apps_found=$(find apps -maxdepth 1 -type d | wc -l)
   if [ $apps_found -le 1 ]; then
@@ -5219,7 +5411,7 @@ DÉBUT gestion_cas_limites
     echo "Structure attendue : apps/admin, apps/dashboard, apps/public"
     exit 1
   fi
-  
+
   # Cas 5 : Firebase CLI non authentifié
   local firebase_user=$(firebase login:list 2>&1 | grep "Logged in as")
   if [ -z "$firebase_user" ]; then
@@ -5229,50 +5421,50 @@ DÉBUT gestion_cas_limites
     echo "Pour vous authentifier : firebase login"
     FIREBASE_AUTHENTICATED=false
   fi
-  
+
   # Cas 6 : Émulateurs déjà running
   if lsof -i :4000 >/dev/null 2>&1; then
     echo "ℹ Émulateurs Firebase déjà en cours d'exécution"
     EMULATORS_ALREADY_RUNNING=true
   fi
-  
+
   # Cas 7 : Build directory inexistant mais config déploiement présente
   if [ "$HOSTING_CONFIGURED" = true ]; then
     for app in admin dashboard public; do
       local public_dir=$(jq -r ".hosting[] | select(.site | contains(\"$app\")) | .public" firebase.json 2>/dev/null)
-      
+
       if [ ! -z "$public_dir" ] && [ ! -d "$public_dir" ]; then
         echo "⚠ Build manquant pour $app : $public_dir"
         echo "  Exécutez 'npm run build --filter=$app' avant de déployer"
       fi
     done
   fi
-  
+
   # Cas 8 : Dépendances node_modules manquantes
   if [ ! -d "node_modules" ]; then
     echo "⚠ node_modules manquant à la racine"
     echo "Installation des dépendances requise"
     read -p "Exécuter 'npm install' maintenant ? (y/n) " install_deps
-    
+
     if [ "$install_deps" = "y" ]; then
       npm install
     else
       echo "Audit limité (dépendances non installées)"
     fi
   fi
-  
+
   # Cas 9 : Espace disque insuffisant
   local available_space=$(df -h . | tail -1 | awk '{print $4}' | sed 's/G//')
   if (( $(echo "$available_space < 1" | bc -l) )); then
     echo "⚠ Warning: Espace disque faible (<1GB disponible)"
     echo "Les builds pourraient échouer"
   fi
-  
+
   # Cas 10 : Timeout sur opérations longues
   # Ajouter timeout sur builds/tests qui prennent trop de temps
   TIMEOUT_BUILD=300  # 5 minutes max par build
   TIMEOUT_TESTS=600  # 10 minutes max pour tous les tests
-  
+
 FIN gestion_cas_limites
 ```
 
@@ -5294,6 +5486,7 @@ Ce plan d'audit "Titanic Health Check" est structuré en **7 phases principales*
 8. **Phase 6** : Génération rapport HTML (calcul statut, HTML/CSS/JS, écriture fichier)
 
 **Caractéristiques clés** :
+
 - Interactif : propose corrections via Gemini en cas d'erreur
 - Robuste : gestion erreurs, validations, cas limites
 - Complet : 15+ vérifications, logs détaillés
@@ -5302,6 +5495,7 @@ Ce plan d'audit "Titanic Health Check" est structuré en **7 phases principales*
 ### 9.2 Instructions précises pour Gemini
 
 **Contexte d'implémentation** :
+
 ```
 Gemini doit transformer ce plan en script bash exécutable sur macOS avec les contraintes suivantes :
 

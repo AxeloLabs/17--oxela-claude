@@ -79,3 +79,138 @@ Generated sources: prelude.gql [73219B] main/relation.gql [43878B] main/query.gq
 [debug] [2025-10-13T01:06:58.191Z] <<< [apiv2][status] GET http://127.0.0.1:4400/emulators 200
 [debug] [2025-10-13T01:06:58.191Z] <<< [apiv2][body] GET http://127.0.0.1:4400/emulators {"hub":{"listen":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"name":"hub","host":"127.0.0.1","port":4400},"apphosting":{"listen":[{"address":"127.0.0.1","family":"IPv4","port":5002}],"name":"apphosting","host":"localhost","port":5002},"dataconnect":{"listen":[{"address":"127.0.0.1","family":"IPv4","port":9399},{"address":"::1","family":"IPv6","port":9399}],"name":"dataconnect","host":"127.0.0.1","port":9399,"pid":4095,"timeout":10000}}
 [warn] ⚠  Data Connect Emulator has exited upon receiving signal: SIGKILL 
+[info] [Firebase Plugin] Stopping Data Connect toolkit
+[debug] [2025-10-16T00:41:09.248Z] [Firebase Plugin] Activating Firebase extension.
+[debug] [2025-10-16T00:41:25.215Z] [Firebase Plugin] requireAuthWrapper
+[debug] [2025-10-16T00:41:25.216Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-16T00:41:25.217Z] > authorizing via signed-in user (regnou.a@gmail.com)
+[debug] [2025-10-16T00:41:25.219Z] Checked if tokens are valid: false, expires at: 1760322854317
+[debug] [2025-10-16T00:41:25.219Z] Checked if tokens are valid: false, expires at: 1760322854317
+[debug] [2025-10-16T00:41:25.219Z] > refreshing access token with scopes: []
+[debug] [2025-10-16T00:41:25.221Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-10-16T00:41:25.221Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-10-16T00:41:25.227Z] [Firebase Plugin] VSCode notification server listening on port 40001
+[debug] [2025-10-16T00:41:25.396Z] Field "/apphosting" in "firebase.json" is possibly invalid: must be object
+[debug] [2025-10-16T00:41:25.397Z] Object "/apphosting/0" in "firebase.json" is missing required property: {"missingProperty":"rootDir"}
+[debug] [2025-10-16T00:41:25.397Z] Field "/apphosting" in "firebase.json" is possibly invalid: must match a schema in anyOf
+[info] [Firebase Plugin] Starting Data Connect toolkit (version 2.14.0) on port 50001
+[info] i  dataconnect: downloading dataconnect-emulator-2.14.0... {"metadata":{"emulator":{"name":"dataconnect"},"message":"downloading dataconnect-emulator-2.14.0..."}}
+[debug] [2025-10-16T00:41:25.402Z] >>> [apiv2][query] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-v2.14.0 
+[debug] [2025-10-16T00:41:26.251Z] <<< [apiv2][status] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-v2.14.0 200
+[debug] [2025-10-16T00:41:26.252Z] <<< [apiv2][body] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-v2.14.0 [stream]
+[debug] [2025-10-16T00:41:26.302Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-10-16T00:41:26.303Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-10-16T00:41:26.328Z] [Firebase Plugin] User found:  regnou.a@gmail.com
+[info] [Firebase Plugin] (Core:Project) New user detected, fetching projects
+[debug] [2025-10-16T00:41:26.329Z] Checked if tokens are valid: true, expires at: 1760578885303
+[debug] [2025-10-16T00:41:26.330Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-10-16T00:41:28.889Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-10-16T00:41:28.889Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[info] [Firebase Plugin] Stopping Data Connect toolkit
+[debug] [2025-10-16T19:26:25.665Z] [Firebase Plugin] Activating Firebase extension.
+[debug] [2025-10-16T19:26:30.013Z] [Firebase Plugin] requireAuthWrapper
+[debug] [2025-10-16T19:26:30.014Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-16T19:26:30.014Z] > authorizing via signed-in user (regnou.a@gmail.com)
+[debug] [2025-10-16T19:26:30.016Z] Checked if tokens are valid: false, expires at: 1760578885303
+[debug] [2025-10-16T19:26:30.017Z] Checked if tokens are valid: false, expires at: 1760578885303
+[debug] [2025-10-16T19:26:30.017Z] > refreshing access token with scopes: []
+[debug] [2025-10-16T19:26:30.018Z] >>> [apiv2][query] POST https://www.googleapis.com/oauth2/v3/token [none]
+[debug] [2025-10-16T19:26:30.018Z] >>> [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-10-16T19:26:30.024Z] [Firebase Plugin] VSCode notification server listening on port 40001
+[debug] [2025-10-16T19:26:31.199Z] Field "/apphosting" in "firebase.json" is possibly invalid: must be object
+[debug] [2025-10-16T19:26:31.200Z] Object "/apphosting/0" in "firebase.json" is missing required property: {"missingProperty":"rootDir"}
+[debug] [2025-10-16T19:26:31.200Z] Field "/apphosting" in "firebase.json" is possibly invalid: must match a schema in anyOf
+[info] [Firebase Plugin] Starting Data Connect toolkit (version 2.14.0) on port 50001
+[info] i  dataconnect: downloading dataconnect-emulator-2.14.0... {"metadata":{"emulator":{"name":"dataconnect"},"message":"downloading dataconnect-emulator-2.14.0..."}}
+[debug] [2025-10-16T19:26:31.204Z] >>> [apiv2][query] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-v2.14.0 
+[debug] [2025-10-16T19:26:31.356Z] <<< [apiv2][status] POST https://www.googleapis.com/oauth2/v3/token 200
+[debug] [2025-10-16T19:26:31.356Z] <<< [apiv2][body] POST https://www.googleapis.com/oauth2/v3/token [omitted]
+[debug] [2025-10-16T19:26:31.365Z] [Firebase Plugin] User found:  regnou.a@gmail.com
+[info] [Firebase Plugin] (Core:Project) New user detected, fetching projects
+[debug] [2025-10-16T19:26:31.366Z] Checked if tokens are valid: true, expires at: 1760646390356
+[debug] [2025-10-16T19:26:31.366Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-10-16T19:26:31.858Z] <<< [apiv2][status] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-v2.14.0 200
+[debug] [2025-10-16T19:26:31.858Z] <<< [apiv2][body] GET https://storage.googleapis.com/firemat-preview-drop/emulator/dataconnect-emulator-macos-v2.14.0 [stream]
+[debug] [2025-10-16T19:26:32.830Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-10-16T19:26:32.831Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
+[info] i  dataconnect: Removing outdated emulator files: dataconnect-emulator-2.13.0 {"metadata":{"emulator":{"name":"dataconnect"},"message":"Removing outdated emulator files: dataconnect-emulator-2.13.0"}}
+[debug] [2025-10-16T19:27:23.799Z] W1016 15:27:23.790998    7480 control.go:68] [/emulator/oxela-auth-service a51e] connector "ecommerce" has errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+
+sources: connectors/ecommerce/queries.gql [5361B] connectors/ecommerce/mutations.gql [6667B] 
+I1016 15:27:23.793953    7480 control.go:94] [/emulator/oxela-auth-service a51e] UpdateResources(): done
+Main schema: sources: schema/schema.gql [2747B] 
+Connector "ecommerce": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"W1016 15:27:23.790998    7480 control.go:68] [/emulator/oxela-auth-service a51e] connector \"ecommerce\" has errors: connectors/ecommerce/mutations.gql:29:12: Field \"firebaseUid\" is not defined by type \"User_Key\".\n\nsources: connectors/ecommerce/queries.gql [5361B] connectors/ecommerce/mutations.gql [6667B] \nI1016 15:27:23.793953    7480 control.go:94] [/emulator/oxela-auth-service a51e] UpdateResources(): done\nMain schema: sources: schema/schema.gql [2747B] \nConnector \"ecommerce\": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] \n"}}
+[debug] [2025-10-16T19:27:23.813Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-10-16T19:27:23.813Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2025-10-16T19:27:23.813Z] Starting Data Connect Emulator with command {"binary":"/Users/ax/.cache/firebase/emulators/dataconnect-emulator-2.14.0","args":["--logtostderr","-v=2","dev","--listen=localhost:50001","--config_dir=/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect","--enable_output_schema_extensions=true","--enable_output_generated_sdk=true"],"optionalArgs":["listen","config_dir","enable_output_schema_extensions","enable_output_generated_sdk"],"joinArgs":true,"shell":false,"port":9399} {"metadata":{"emulator":{"name":"dataconnect"},"message":"Starting Data Connect Emulator with command {\"binary\":\"/Users/ax/.cache/firebase/emulators/dataconnect-emulator-2.14.0\",\"args\":[\"--logtostderr\",\"-v=2\",\"dev\",\"--listen=localhost:50001\",\"--config_dir=/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect\",\"--enable_output_schema_extensions=true\",\"--enable_output_generated_sdk=true\"],\"optionalArgs\":[\"listen\",\"config_dir\",\"enable_output_schema_extensions\",\"enable_output_generated_sdk\"],\"joinArgs\":true,\"shell\":false,\"port\":9399}"}}
+[info] i  dataconnect: Data Connect Emulator logging to dataconnect-debug.log {"metadata":{"emulator":{"name":"dataconnect"},"message":"Data Connect Emulator logging to dataconnect-debug.log"}}
+[debug] [2025-10-16T19:27:24.075Z] I1016 15:27:24.073415    7489 load.go:31] Reloading schema and connectors...
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I1016 15:27:24.073415    7489 load.go:31] Reloading schema and connectors...\n"}}
+[debug] [2025-10-16T19:27:24.212Z] W1016 15:27:24.211687    7489 control.go:68] [/emulator/oxela-auth-service 1295] connector "ecommerce" has errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+
+sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+I1016 15:27:24.212508    7489 control.go:94] [/emulator/oxela-auth-service 1295] UpdateResources(): done
+Main schema: sources: schema/schema.gql [2747B] 
+Connector "ecommerce": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"W1016 15:27:24.211687    7489 control.go:68] [/emulator/oxela-auth-service 1295] connector \"ecommerce\" has errors: connectors/ecommerce/mutations.gql:29:12: Field \"firebaseUid\" is not defined by type \"User_Key\".\n\nsources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] \nI1016 15:27:24.212508    7489 control.go:94] [/emulator/oxela-auth-service 1295] UpdateResources(): done\nMain schema: sources: schema/schema.gql [2747B] \nConnector \"ecommerce\": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] \n"}}
+[debug] [2025-10-16T19:27:24.216Z] E1016 15:27:24.216820    7489 load.go:73] Could not load sources: 
+Errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"E1016 15:27:24.216820    7489 load.go:73] Could not load sources: \nErrors: connectors/ecommerce/mutations.gql:29:12: Field \"firebaseUid\" is not defined by type \"User_Key\".\n"}}
+[debug] [2025-10-16T19:27:24.220Z] I1016 15:27:24.220342    7489 collector.go:107] schema extensions wrote into "/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect/.dataconnect/schema"
+Generated sources: main/input.gql [102849B] main/relation.gql [43878B] prelude.gql [73219B] main/query.gql [8782B] main/mutation.gql [23630B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I1016 15:27:24.220342    7489 collector.go:107] schema extensions wrote into \"/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect/.dataconnect/schema\"\nGenerated sources: main/input.gql [102849B] main/relation.gql [43878B] prelude.gql [73219B] main/query.gql [8782B] main/mutation.gql [23630B] \n"}}
+[debug] [2025-10-16T19:27:24.220Z] I1016 15:27:24.220576    7489 load.go:74] Finished reloading
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I1016 15:27:24.220576    7489 load.go:74] Finished reloading\n"}}
+[debug] [2025-10-16T19:27:24.228Z] I1016 15:27:24.228504    7489 dev.go:102] Listening on address (HTTP + gRPC): 127.0.0.1:50001
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I1016 15:27:24.228504    7489 dev.go:102] Listening on address (HTTP + gRPC): 127.0.0.1:50001\n"}}
+[info] [Firebase Plugin] Stopping Data Connect toolkit
+[warn] ⚠  Data Connect Emulator has exited upon receiving signal: SIGINT 
+[debug] [2025-10-16T19:39:30.914Z] [Firebase Plugin] Activating Firebase extension.
+[debug] [2025-10-16T19:39:35.668Z] [Firebase Plugin] requireAuthWrapper
+[debug] [2025-10-16T19:39:35.670Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2025-10-16T19:39:35.670Z] > authorizing via signed-in user (regnou.a@gmail.com)
+[debug] [2025-10-16T19:39:35.673Z] Checked if tokens are valid: true, expires at: 1760646390356
+[debug] [2025-10-16T19:39:35.674Z] Checked if tokens are valid: true, expires at: 1760646390356
+[debug] [2025-10-16T19:39:35.674Z] [Firebase Plugin] User found:  regnou.a@gmail.com
+[info] [Firebase Plugin] (Core:Project) New user detected, fetching projects
+[debug] [2025-10-16T19:39:35.674Z] Checked if tokens are valid: true, expires at: 1760646390356
+[debug] [2025-10-16T19:39:35.676Z] >>> [apiv2][query] GET https://firebase.googleapis.com/v1beta1/projects pageSize=1000
+[debug] [2025-10-16T19:39:35.683Z] [Firebase Plugin] VSCode notification server listening on port 40001
+[debug] [2025-10-16T19:39:37.305Z] Field "/apphosting" in "firebase.json" is possibly invalid: must be object
+[debug] [2025-10-16T19:39:37.306Z] Object "/apphosting/0" in "firebase.json" is missing required property: {"missingProperty":"rootDir"}
+[debug] [2025-10-16T19:39:37.306Z] Field "/apphosting" in "firebase.json" is possibly invalid: must match a schema in anyOf
+[info] [Firebase Plugin] Starting Data Connect toolkit (version 2.14.0) on port 50001
+[debug] [2025-10-16T19:39:37.901Z] W1016 15:39:37.893150    8365 control.go:68] [/emulator/oxela-auth-service 503a] connector "ecommerce" has errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+
+sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+I1016 15:39:37.896391    8365 control.go:94] [/emulator/oxela-auth-service 503a] UpdateResources(): done
+Main schema: sources: schema/schema.gql [2747B] 
+Connector "ecommerce": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"W1016 15:39:37.893150    8365 control.go:68] [/emulator/oxela-auth-service 503a] connector \"ecommerce\" has errors: connectors/ecommerce/mutations.gql:29:12: Field \"firebaseUid\" is not defined by type \"User_Key\".\n\nsources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] \nI1016 15:39:37.896391    8365 control.go:94] [/emulator/oxela-auth-service 503a] UpdateResources(): done\nMain schema: sources: schema/schema.gql [2747B] \nConnector \"ecommerce\": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] \n"}}
+[debug] [2025-10-16T19:39:37.901Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2025-10-16T19:39:37.901Z] Ignoring unsupported arg: port {"metadata":{"emulator":{"name":"dataconnect"},"message":"Ignoring unsupported arg: port"}}
+[debug] [2025-10-16T19:39:37.901Z] Starting Data Connect Emulator with command {"binary":"/Users/ax/.cache/firebase/emulators/dataconnect-emulator-2.14.0","args":["--logtostderr","-v=2","dev","--listen=localhost:50001","--config_dir=/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect","--enable_output_schema_extensions=true","--enable_output_generated_sdk=true"],"optionalArgs":["listen","config_dir","enable_output_schema_extensions","enable_output_generated_sdk"],"joinArgs":true,"shell":false,"port":9399} {"metadata":{"emulator":{"name":"dataconnect"},"message":"Starting Data Connect Emulator with command {\"binary\":\"/Users/ax/.cache/firebase/emulators/dataconnect-emulator-2.14.0\",\"args\":[\"--logtostderr\",\"-v=2\",\"dev\",\"--listen=localhost:50001\",\"--config_dir=/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect\",\"--enable_output_schema_extensions=true\",\"--enable_output_generated_sdk=true\"],\"optionalArgs\":[\"listen\",\"config_dir\",\"enable_output_schema_extensions\",\"enable_output_generated_sdk\"],\"joinArgs\":true,\"shell\":false,\"port\":9399}"}}
+[info] i  dataconnect: Data Connect Emulator logging to dataconnect-debug.log {"metadata":{"emulator":{"name":"dataconnect"},"message":"Data Connect Emulator logging to dataconnect-debug.log"}}
+[debug] [2025-10-16T19:39:38.304Z] I1016 15:39:38.300415    8371 load.go:31] Reloading schema and connectors...
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I1016 15:39:38.300415    8371 load.go:31] Reloading schema and connectors...\n"}}
+[debug] [2025-10-16T19:39:38.478Z] W1016 15:39:38.478045    8371 control.go:68] [/emulator/oxela-auth-service 1c10] connector "ecommerce" has errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+
+sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"W1016 15:39:38.478045    8371 control.go:68] [/emulator/oxela-auth-service 1c10] connector \"ecommerce\" has errors: connectors/ecommerce/mutations.gql:29:12: Field \"firebaseUid\" is not defined by type \"User_Key\".\n\nsources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] \n"}}
+[debug] [2025-10-16T19:39:38.479Z] I1016 15:39:38.479025    8371 control.go:94] [/emulator/oxela-auth-service 1c10] UpdateResources(): done
+Main schema: sources: schema/schema.gql [2747B] 
+Connector "ecommerce": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I1016 15:39:38.479025    8371 control.go:94] [/emulator/oxela-auth-service 1c10] UpdateResources(): done\nMain schema: sources: schema/schema.gql [2747B] \nConnector \"ecommerce\": sources: connectors/ecommerce/mutations.gql [6667B] connectors/ecommerce/queries.gql [5361B] \n"}}
+[debug] [2025-10-16T19:39:38.487Z] E1016 15:39:38.486113    8371 load.go:73] Could not load sources: 
+Errors: connectors/ecommerce/mutations.gql:29:12: Field "firebaseUid" is not defined by type "User_Key".
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"E1016 15:39:38.486113    8371 load.go:73] Could not load sources: \nErrors: connectors/ecommerce/mutations.gql:29:12: Field \"firebaseUid\" is not defined by type \"User_Key\".\n"}}
+[debug] [2025-10-16T19:39:38.489Z] I1016 15:39:38.489716    8371 collector.go:107] schema extensions wrote into "/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect/.dataconnect/schema"
+Generated sources: main/relation.gql [43878B] main/query.gql [8782B] main/mutation.gql [23630B] prelude.gql [73219B] main/input.gql [102849B] 
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I1016 15:39:38.489716    8371 collector.go:107] schema extensions wrote into \"/Users/ax/1-VS/0--proj/17--oxela-claude/dataconnect/.dataconnect/schema\"\nGenerated sources: main/relation.gql [43878B] main/query.gql [8782B] main/mutation.gql [23630B] prelude.gql [73219B] main/input.gql [102849B] \n"}}
+[debug] [2025-10-16T19:39:38.490Z] I1016 15:39:38.489923    8371 load.go:74] Finished reloading
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I1016 15:39:38.489923    8371 load.go:74] Finished reloading\n"}}
+[debug] [2025-10-16T19:39:38.501Z] I1016 15:39:38.501044    8371 dev.go:102] Listening on address (HTTP + gRPC): 127.0.0.1:50001
+ {"metadata":{"emulator":{"name":"dataconnect"},"message":"I1016 15:39:38.501044    8371 dev.go:102] Listening on address (HTTP + gRPC): 127.0.0.1:50001\n"}}
+[debug] [2025-10-16T19:39:39.813Z] <<< [apiv2][status] GET https://firebase.googleapis.com/v1beta1/projects 200
+[debug] [2025-10-16T19:39:39.814Z] <<< [apiv2][body] GET https://firebase.googleapis.com/v1beta1/projects [omitted]
