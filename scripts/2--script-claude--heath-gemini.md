@@ -359,6 +359,11 @@ FIN SI
 
 ```
 
+
+
+
+
+
 ---
 
 ### PHASE 2 : Build Check
@@ -723,9 +728,9 @@ Total : 247 tests (225 actifs, 22 skipped) dans 34 suites
 ```
 
 POUR CHAQUE framework détecté FAIRE
-DÉBUT execution_tests - Identifier commande de test appropriée :
-_ Jest : turbo run test --filter=[workspace] -- --json --outputFile=/tmp/jest-results.json
-_ Vitest : vitest run --reporter=json --outputFile=/tmp/vitest-results.json \* Playwright : playwright test --reporter=json
+DÉBUT execution*tests - Identifier commande de test appropriée :
+* Jest : turbo run test --filter=[workspace] -- --json --outputFile=/tmp/jest-results.json
+\_ Vitest : vitest run --reporter=json --outputFile=/tmp/vitest-results.json \* Playwright : playwright test --reporter=json
 
     - Capturer timestamp début
     - Exécuter commande de test :
@@ -1174,6 +1179,7 @@ DÉBUT detection_data_connect
 
   - SI section existe ALORS
     data_connect_configured = true
+
     - Extraire configuration :
 
       - source (chemin du schéma)
@@ -1190,11 +1196,11 @@ DÉBUT detection_data_connect
         - Compter nombre de queries définis
         - Compter nombre de mutations définies
         - Extraire liste des tables/collections principales
-        schema_status = "FOUND"
-        SINON
-        schema_status = "MISSING"
-        STATUS global = "WARNING"
-        FIN SI
+          schema_status = "FOUND"
+          SINON
+          schema_status = "MISSING"
+          STATUS global = "WARNING"
+          FIN SI
 
     - Vérifier configuration GraphQL :
 
@@ -1267,11 +1273,9 @@ DÉBUT detection_static_deploy
   _ ignore (fichiers ignorés)
   _ rewrites (règles de routage)
   _ headers (en-têtes personnalisés)
-  _ redirects
-      - Identifier application correspondante :
-        * Comparer "public" avec structure apps/
-        * Ex : "public": "apps/admin/out" → app = admin
-        * Ex : "public": "apps/public/dist" → app = public
+  _ redirects - Identifier application correspondante :
+  _ Comparer "public" avec structure apps/
+  _ Ex : "public": "apps/admin/out" → app = admin \* Ex : "public": "apps/public/dist" → app = public
 
       - Détecter type de build :
         * SI répertoire = "out" ou contient "_next" → type = "Next.js SSG"
@@ -1302,6 +1306,7 @@ DÉBUT detection_static_deploy
         * Vérifier index.html a no-cache
 
       - Enregistrer dans deploy_results.static[app]
+
   FIN POUR
   FIN detection_static_deploy
 
@@ -1771,13 +1776,13 @@ DÉBUT calcul_statut_global
 
 - Enregistrer métriques globales :
   _ timestamp_debut
-  _ timestamp_fin
-  _ duree_totale (en secondes et format humain)
-  _ total_checks
-  _ passed_checks
-  _ warning_checks
-  _ error_checks
-  _ health_score \* GLOBAL_STATUS
+  _ timestamp*fin
+  * duree*totale (en secondes et format humain)
+  * total*checks
+  * passed*checks
+  * warning*checks
+  * error*checks
+  * health_score \* GLOBAL_STATUS
   FIN calcul_statut_global
 
 ```
@@ -1813,21 +1818,21 @@ DÉBUT generation_html
 - OU : /superdev/reports/titanic-health.html (écrase version précédente)
 
 - Structure du document :
-      <!DOCTYPE html>
-      <html lang="fr">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Titanic Health Check - [timestamp]</title>
-        <style>
-          [CSS embarqué - voir section 6.3]
-        </style>
-      </head>
-      <body>
-        <!-- Header avec logo et titre -->
-        <header>
-          [Section 6.4]
-        </header>
+  <!DOCTYPE html>
+  <html lang="fr">
+  <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Titanic Health Check - [timestamp]</title>
+  <style>
+  [CSS embarqué - voir section 6.3]
+  </style>
+  </head>
+  <body>
+  <!-- Header avec logo et titre -->
+  <header>
+  [Section 6.4]
+  </header>
 
         <!-- Résumé exécutif -->
         <section id="executive-summary">
@@ -1881,6 +1886,7 @@ DÉBUT generation_html
         </script>
       </body>
       </html>
+
   FIN generation_html
 
 ```
@@ -4348,8 +4354,8 @@ Provide:
 2.  Configuration issue or auth issue?
 3.  Step-by-step fix
 4.  Corrected config if needed`;
-          showGeminiPromptModal('Deploy Error', prompt, deployLog);
-        }
+    showGeminiPromptModal('Deploy Error', prompt, deployLog);
+    }
 
         function showGeminiPromptModal(title, prompt, context) {
           // Créer modal
@@ -4587,6 +4593,7 @@ Provide:
             });
           }
         });
+
       </script>
     FIN generation_javascript
 
@@ -4641,10 +4648,10 @@ DÉBUT ecriture_fichier_html
 - Proposer d'ouvrir le rapport :
   echo ""
   read -p "Ouvrir le rapport dans le navigateur ? (y/n) " open_browser
-      SI open_browser == "y" OU open_browser == "Y" ALORS
-        open "$output_path"  # macOS
-        Afficher : "✓ Rapport ouvert dans le navigateur par défaut"
-      FIN SI
+  SI open_browser == "y" OU open_browser == "Y" ALORS
+  open "$output_path" # macOS
+  Afficher : "✓ Rapport ouvert dans le navigateur par défaut"
+  FIN SI
   FIN ecriture_fichier_html
   DÉBUT execution_globale
   #!/bin/bash

@@ -136,6 +136,7 @@ initialize() {
     RESULTS_DIR=$(mktemp -d)
     log_msg "INFO" "Intermediate results will be stored in: $RESULTS_DIR"
     CONFIG_RESULTS_FILE="$RESULTS_DIR/config_results.json"
+    GIT_RESULTS_FILE="$RESULTS_DIR/git_results.json"
     # Initialize a structured JSON object for all config results, including the new coherence section
     echo '{"files": [], "environments": {"firebaserc": null, "firebase_json": null, "env_files": []}, "coherence": {"checks": [], "divergences": []}}' | jq '.' > "$CONFIG_RESULTS_FILE"
 }
@@ -235,9 +236,11 @@ extract_environments_and_keys() {
 
         # Grep for all relevant Firebase variables
         while IFS= read -r line; do
-            if [[ "$line" =~ ^(NEXT_PUBLIC_FIREBASE_|VITE_FIREBASE_|FIREBASE_)?(API_KEY|AUTH_DOMAIN|PROJECT_ID|STORAGE_BUCKET|MESSAGING_SENDER_ID|APP_ID|DATA_CONNECT_URL)=(.*) ]]; then
-                local key="${BASH_REMATCH[2],,}" # a_b_c -> a_b_c
-                key=${key//_/-} # a-b-c -> a-b-c
+            # Improved regex to handle optional prefixes and stop at comments
+            if [[ "$line" =~ ^(NEXT_PUBLIC_FIREBASE_|VITE_FIREBASE_|FIREBASE_)?(API_KEY|AUTH_DOMAIN|PROJECT_ID|STORAGE_BUCKET|MESSAGING_SENDER_ID|APP_ID|DATA_CONNECT_URL)=([^#]*) ]]; then
+                # Portable way to convert to lowercase
+                local key=$(echo "${BASH_REMATCH[2]}" | tr '[:upper:]' '[:lower:]')
+                key=${key//_/-} # api_key -> api-key
                 local value="${BASH_REMATCH[3]}"
                 
                 # Remove quotes if present
@@ -245,6 +248,9 @@ extract_environments_and_keys() {
                 value="${value#\"}"
                 value="${value%\'}"
                 value="${value#\'}"
+
+                # Trim whitespace
+                value=$(echo "$value" | xargs)
 
                 local display_value="$value"
                 if [[ "$key" == "api-key" ]]; then
@@ -324,14 +330,16 @@ verify_config_coherence() {
 
     # Compare with .env files
     local env_pids
-    env_pids=$(jq -c '.environments.env_files[] | select(.keys."project-id") | {file: .file, projectId: .keys."project-id"}' "$CONFIG_RESULTS_FILE")
+    env_pids=$(jq -c '.environments.env_files[] | select((.file | endswith(".example") | not) and .keys."project-id" != null and .keys."project-id" != "") | {file: .file, projectId: .keys."project-id"}' "$CONFIG_RESULTS_FILE")
     while IFS= read -r env_pid_obj; do
-        local file=$(echo "$env_pid_obj" | jq -r '.file')
-        local pid=$(echo "$env_pid_obj" | jq -r '.projectId')
-        temp_divergences_array=$(echo "$temp_divergences_array" | jq --arg file "$file" --arg pid "$pid" '. + [{"source": $file, "projectId": $pid}]')
-        if [ -n "$ref_project_id" ] && [ "$ref_project_id" != "$pid" ]; then
-            log_msg "WARNING" "projectId in $file ('$pid') differs from .firebaserc ('$ref_project_id')."
-            OVERALL_STATUS="WARNING"
+        if [ -n "$env_pid_obj" ]; then
+            local file=$(echo "$env_pid_obj" | jq -r '.file')
+            local pid=$(echo "$env_pid_obj" | jq -r '.projectId')
+            temp_divergences_array=$(echo "$temp_divergences_array" | jq --arg file "$file" --arg pid "$pid" '. + [{"source": $file, "projectId": $pid}]')
+            if [ -n "$ref_project_id" ] && [ "$ref_project_id" != "$pid" ]; then
+                log_msg "WARNING" "projectId in $file ('$pid') differs from .firebaserc ('$ref_project_id')."
+                OVERALL_STATUS="WARNING"
+            fi
         fi
     done <<< "$env_pids"
 
@@ -357,7 +365,7 @@ verify_config_coherence() {
 
     # --- Check for corresponding rule files ---
     local services
-    services=$(jq -r '.environments.firebase_json | del(.projectId, .emulators, .hosting) | keys[]' "$CONFIG_RESULTS_FILE")
+    services=$(jq -r '.environments.firebase_json | del(.projectId, .emulators, .hosting) | to_entries[] | select(.value | (type == "object" or type == "array") and length > 0) | .key' "$CONFIG_RESULTS_FILE")
     for service in $services; do
         local rule_file=""
         case $service in
@@ -382,6 +390,76 @@ verify_config_coherence() {
     jq --argjson checks "$temp_coherence_array" --argjson divs "$temp_divergences_array" \
         '.coherence.checks = $checks | .coherence.divergences = $divs' \
         "$CONFIG_RESULTS_FILE" > "$CONFIG_RESULTS_FILE.tmp" && mv "$CONFIG_RESULTS_FILE.tmp" "$CONFIG_RESULTS_FILE"
+}
+
+# ---
+# PHASE 1.5: GIT STATUS
+# ---
+
+# 1.5.1: Check working directory status
+check_git_status() {
+    log_msg "INFO" "PHASE 1.5.1: Checking Git working directory status..."
+    # Initialize JSON file
+    echo '{"status": "NOT_A_REPO", "files": [], "stats": {}}' > "$GIT_RESULTS_FILE"
+
+    if [ ! -d ".git" ]; then
+        log_msg "WARNING" "Not a Git repository. Skipping Git checks."
+        if [ "$OVERALL_STATUS" != "CRITICAL" ]; then OVERALL_STATUS="WARNING"; fi
+        jq '.coherence.checks += [{"check": "Git Repository", "status": "WARNING", "message": "Not a Git repository"}]' "$CONFIG_RESULTS_FILE" > "$CONFIG_RESULTS_FILE.tmp" && mv "$CONFIG_RESULTS_FILE.tmp" "$CONFIG_RESULTS_FILE"
+        return
+    fi
+
+    local git_status_output
+    git_status_output=$(git status --porcelain)
+
+    local modified_count=0
+    local untracked_count=0
+    local added_count=0
+    local deleted_count=0
+    local conflict_count=0
+    local git_status="CLEAN"
+
+    if [ -n "$git_status_output" ]; then
+        # Use grep with -c flag for counting, which is more efficient than piping to wc -l
+        modified_count=$(echo "$git_status_output" | grep -c "^ M " || true)
+        untracked_count=$(echo "$git_status_output" | grep -c "^??" || true)
+        added_count=$(echo "$git_status_output" | grep -c "^A " || true)
+        deleted_count=$(echo "$git_status_output" | grep -c "^ D" || true)
+        conflict_count=$(echo "$git_status_output" | grep -c -E "^(UU|AA|DD|AU|UA|UD|DU)" || true)
+        
+        if [ "$conflict_count" -gt 0 ]; then
+            git_status="CONFLICT"
+            OVERALL_STATUS="CRITICAL"
+            local conflict_files
+            conflict_files=$(echo "$git_status_output" | grep -E "^(UU|AA|DD|AU|UA|UD|DU)")
+            log_msg "CRITICAL" "GIT CONFLICTS DETECTED - Manual resolution required."
+            echo "----------------------------------------------------------------" >&2
+            echo "⚠️ CONFLITS GIT DÉTECTÉS - Résolution manuelle requise avant de continuer." >&2
+            echo "Fichiers en conflit :" >&2
+            echo "$conflict_files" >&2
+            echo "" >&2
+            echo "Gemini ne peut pas résoudre automatiquement les conflits de merge." >&2
+            echo "Veuillez résoudre manuellement avec 'git status' et 'git mergetool'." >&2
+            echo "----------------------------------------------------------------" >&2
+            exit 1
+        else
+            git_status="DIRTY"
+            if [ "$OVERALL_STATUS" != "CRITICAL" ]; then OVERALL_STATUS="WARNING"; fi
+        fi
+    fi
+
+    local files_json
+    files_json=$(echo "$git_status_output" | head -n 20 | jq -R -s 'split("\n") | map(select(length > 0))')
+
+    jq -n \
+      --arg status "$git_status" \
+      --argjson files "$files_json" \
+      --argjson mc "$modified_count" \
+      --argjson uc "$untracked_count" \
+      --argjson ac "$added_count" \
+      --argjson dc "$deleted_count" \
+      --argjson cc "$conflict_count" \
+      '{status: $status, files: $files, stats: {modified: $mc, untracked: $uc, added: $ac, deleted: $dc, conflicts: $cc}}' > "$GIT_RESULTS_FILE"
 }
 
 main() {
@@ -412,6 +490,12 @@ main() {
 
     log_msg "INFO" "Firebase config analysis complete. Results:"
     jq '.' "$CONFIG_RESULTS_FILE" | tee -a "$LOG_FILE"
+
+    echo ""
+    log_msg "INFO" "PHASE 1.5: Auditing Git Repository"
+    check_git_status
+    log_msg "INFO" "Git status analysis complete. Results:"
+    jq '.' "$GIT_RESULTS_FILE" | tee -a "$LOG_FILE"
 
     
     # ... The rest of the phases will be implemented here ...
