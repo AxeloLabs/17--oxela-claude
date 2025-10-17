@@ -55,6 +55,7 @@ LOG_FILE=""
 # Data files for results
 RESULTS_DIR=""
 CONFIG_RESULTS_FILE=""
+GIT_RESULTS_FILE=""
 
 # ---
 # Helper Functions
@@ -86,6 +87,20 @@ find_project_root() {
         dir=$(dirname "$dir")
     done
     echo "" # Not found
+}
+
+# Masks a sensitive value, showing only the first 4 and last 4 characters.
+# Usage: masked_value=$(mask_sensitive "your-secret-key")
+mask_sensitive() {
+    local value=$1
+    local len=${#value}
+    if [ "$len" -le 8 ]; then
+        echo "****"
+    else
+        local start="${value:0:4}"
+        local end="${value: -4}"
+        echo "${start}****${end}"
+    fi
 }
 
 # Cleanup function to be called on script exit
@@ -121,7 +136,8 @@ initialize() {
     RESULTS_DIR=$(mktemp -d)
     log_msg "INFO" "Intermediate results will be stored in: $RESULTS_DIR"
     CONFIG_RESULTS_FILE="$RESULTS_DIR/config_results.json"
-    echo "[]" > "$CONFIG_RESULTS_FILE" # Initialize as empty JSON array
+    # Initialize a structured JSON object for all config results
+    echo '{"files": [], "environments": {"firebaserc": null, "firebase_json": null, "env_files": []}}' | jq '.' > "$CONFIG_RESULTS_FILE"
 }
 
 # ---
@@ -131,6 +147,7 @@ initialize() {
 # 1.1: Detect configuration files
 detect_config_files() {
     log_msg "INFO" "PHASE 1.1: Detecting Firebase configuration files..."
+    local temp_json_array="[]"
 
     local files_to_check=(
         "firebase.json"
@@ -142,16 +159,106 @@ detect_config_files() {
     )
 
     # Find files in root
-    for file in "${files_to_check[@]}"; do
-        find . -maxdepth 1 -name "$file"
+    for file_pattern in "${files_to_check[@]}"; do
+        while IFS= read -r file_path; do
+            if [ -n "$file_path" ]; then
+                local last_mod
+                last_mod=$(stat -f "%Sm" -t "%Y-%m-%dT%H:%M:%S%z" "$file_path")
+                local readable="MANQUANT"
+                [ -r "$file_path" ] && readable="LISIBLE"
+                
+                local json_obj
+                json_obj=$(jq -n \
+                    --arg file "$(basename "$file_path")" \
+                    --arg path "$file_path" \
+                    --arg status "TROUVÉ" \
+                    --arg readable "$readable" \
+                    --arg last_mod "$last_mod" \
+                    '{file: $file, path: $path, status: $status, readable: $readable, last_modified: $last_mod}')
+                temp_json_array=$(echo "$temp_json_array" | jq --argjson obj "$json_obj" '. + [$obj]')
+            fi
+        done < <(find . -maxdepth 1 -name "$file_pattern" -type f)
     done
 
-    # Find env files and framework configs in apps
-    find ./apps -maxdepth 2 \( -name ".env*" -o -name "next.config.js" -o -name "vite.config.js" -o -name "firebase-config.ts" -o -name "firebaseConfig.js" \) -type f
+    # Update the main results file
+    jq --argjson arr "$temp_json_array" '.files = $arr' "$CONFIG_RESULTS_FILE" > "$CONFIG_RESULTS_FILE.tmp" && mv "$CONFIG_RESULTS_FILE.tmp" "$CONFIG_RESULTS_FILE"
+}
 
-    # Find firebase-related files in packages
-    find ./packages -name "*firebase*" -type f
+# 1.2: Extract environments and keys
+extract_environments_and_keys() {
+    log_msg "INFO" "PHASE 1.2: Extracting environments and keys..."
 
+    # --- Parse .firebaserc ---
+    if [ -f ".firebaserc" ]; then
+        log_msg "INFO" "Parsing .firebaserc..."
+        local firebaserc_json
+        firebaserc_json=$(jq '.projects' .firebaserc)
+        jq --argjson projects "$firebaserc_json" '.environments.firebaserc = $projects' "$CONFIG_RESULTS_FILE" > "$CONFIG_RESULTS_FILE.tmp" && mv "$CONFIG_RESULTS_FILE.tmp" "$CONFIG_RESULTS_FILE"
+    else
+        log_msg "WARNING" ".firebaserc not found."
+    fi
+
+    # --- Parse firebase.json ---
+    if [ -f "firebase.json" ]; then
+        log_msg "INFO" "Parsing firebase.json for services..."
+        local services_json
+        services_json=$(jq '{
+            projectId: (.projectId // null),
+            hosting: (.hosting // null),
+            functions: (.functions // null),
+            firestore: (.firestore // null),
+            storage: (.storage // null),
+            emulators: (.emulators // null),
+            dataconnect: (.dataconnect // null)
+        }' firebase.json)
+        jq --argjson services "$services_json" '.environments.firebase_json = $services' "$CONFIG_RESULTS_FILE" > "$CONFIG_RESULTS_FILE.tmp" && mv "$CONFIG_RESULTS_FILE.tmp" "$CONFIG_RESULTS_FILE"
+    else
+        log_msg "CRITICAL" "firebase.json not found."
+        OVERALL_STATUS="CRITICAL"
+    fi
+
+    # --- Scan .env* files ---
+    log_msg "INFO" "Scanning .env* files for Firebase keys..."
+    local env_files
+    env_files=$(find ./apps -name ".env*")
+    local temp_env_array="[]"
+
+    for file in $env_files; do
+        local app_name
+        app_name=$(echo "$file" | cut -d'/' -f3)
+        local env_name
+        env_name=$(basename "$file" | sed 's/\.env\.//' | sed 's/\.env//')
+        [ -z "$env_name" ] && env_name="default"
+
+        local file_vars_json="{}"
+        file_vars_json=$(jq -n --arg app "$app_name" --arg env "$env_name" --arg file "$file" '{app: $app, environment: $env, file: $file, keys: {}}')
+
+        # Grep for all relevant Firebase variables
+        while IFS= read -r line; do
+            if [[ "$line" =~ ^(NEXT_PUBLIC_FIREBASE_|VITE_FIREBASE_|FIREBASE_)?(API_KEY|AUTH_DOMAIN|PROJECT_ID|STORAGE_BUCKET|MESSAGING_SENDER_ID|APP_ID|DATA_CONNECT_URL)=(.*) ]]; then
+                local key="${BASH_REMATCH[2],,}" # a_b_c -> a_b_c
+                key=${key//_/-} # a-b-c -> a-b-c
+                local value="${BASH_REMATCH[3]}"
+                
+                # Remove quotes if present
+                value="${value%\"}"
+                value="${value#\"}"
+                value="${value%\'}"
+                value="${value#\'}"
+
+                local display_value="$value"
+                if [[ "$key" == "api-key" ]]; then
+                    display_value=$(mask_sensitive "$value")
+                fi
+
+                file_vars_json=$(echo "$file_vars_json" | jq --arg k "$key" --arg v "$display_value" '.keys[$k] = $v')
+            fi
+        done < <(grep -E '^(NEXT_PUBLIC_FIREBASE_|VITE_FIREBASE_|FIREBASE_)' "$file" || true)
+
+        temp_env_array=$(echo "$temp_env_array" | jq --argjson obj "$file_vars_json" '. + [$obj]')
+    done
+
+    jq --argjson arr "$temp_env_array" '.environments.env_files = $arr' "$CONFIG_RESULTS_FILE" > "$CONFIG_RESULTS_FILE.tmp" && mv "$CONFIG_RESULTS_FILE.tmp" "$CONFIG_RESULTS_FILE"
 }
 
 main() {
@@ -176,10 +283,13 @@ main() {
     echo ""
     log_msg "INFO" "PHASE 1: Auditing Firebase Configuration"
     
-    # The output of this function will be processed to generate the report table
-    detected_files=$(detect_config_files)
-    log_msg "INFO" "Detected potential configuration files:\n$detected_files"
+    detect_config_files
+    extract_environments_and_keys
 
+    log_msg "INFO" "Firebase config analysis complete. Results:"
+    jq '.' "$CONFIG_RESULTS_FILE" | tee -a "$LOG_FILE"
+
+    
     # ... The rest of the phases will be implemented here ...
 
     log_msg "INFO" "Health check script started successfully."
