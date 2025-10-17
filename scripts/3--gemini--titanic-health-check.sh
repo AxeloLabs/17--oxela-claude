@@ -136,8 +136,8 @@ initialize() {
     RESULTS_DIR=$(mktemp -d)
     log_msg "INFO" "Intermediate results will be stored in: $RESULTS_DIR"
     CONFIG_RESULTS_FILE="$RESULTS_DIR/config_results.json"
-    # Initialize a structured JSON object for all config results
-    echo '{"files": [], "environments": {"firebaserc": null, "firebase_json": null, "env_files": []}}' | jq '.' > "$CONFIG_RESULTS_FILE"
+    # Initialize a structured JSON object for all config results, including the new coherence section
+    echo '{"files": [], "environments": {"firebaserc": null, "firebase_json": null, "env_files": []}, "coherence": {"checks": [], "divergences": []}}' | jq '.' > "$CONFIG_RESULTS_FILE"
 }
 
 # ---
@@ -261,6 +261,129 @@ extract_environments_and_keys() {
     jq --argjson arr "$temp_env_array" '.environments.env_files = $arr' "$CONFIG_RESULTS_FILE" > "$CONFIG_RESULTS_FILE.tmp" && mv "$CONFIG_RESULTS_FILE.tmp" "$CONFIG_RESULTS_FILE"
 }
 
+# 1.3: Verify configuration coherence
+verify_config_coherence() {
+    log_msg "INFO" "PHASE 1.3: Verifying configuration coherence..."
+    local temp_coherence_array="[]"
+    local temp_divergences_array="[]"
+
+    # --- Check for mandatory files ---
+    if ! jq -e '.files[] | select(.file == ".firebaserc")' "$CONFIG_RESULTS_FILE" > /dev/null; then
+        log_msg "CRITICAL" ".firebaserc is missing. This is a critical configuration file."
+        OVERALL_STATUS="CRITICAL"
+        temp_coherence_array=$(echo "$temp_coherence_array" | jq '. + [{"check": "Presence of .firebaserc", "status": "ERROR", "message": ".firebaserc file is missing"}]')
+    else
+        temp_coherence_array=$(echo "$temp_coherence_array" | jq '. + [{"check": "Presence of .firebaserc", "status": "OK", "message": ".firebaserc found"}]')
+    fi
+
+    if ! jq -e '.files[] | select(.file == "firebase.json")' "$CONFIG_RESULTS_FILE" > /dev/null; then
+        log_msg "CRITICAL" "firebase.json is missing. This is a critical configuration file."
+        OVERALL_STATUS="CRITICAL"
+        temp_coherence_array=$(echo "$temp_coherence_array" | jq '. + [{"check": "Presence of firebase.json", "status": "ERROR", "message": "firebase.json file is missing"}]')
+    else
+        temp_coherence_array=$(echo "$temp_coherence_array" | jq '. + [{"check": "Presence of firebase.json", "status": "OK", "message": "firebase.json found"}]')
+    fi
+
+    # If critical files are missing, offer to generate them and exit
+    if [ "$OVERALL_STATUS" == "CRITICAL" ]; then
+        read -p "Configuration Firebase incomplète détectée. Voulez-vous que Gemini génère les fichiers manquants ? (y/n) " -r
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            echo ""
+            log_msg "GEMINI" "Génération du prompt pour la configuration Firebase..."
+            echo "----------------------------------------------------------------"
+            echo "Generate missing Firebase configuration files for a Turborepo project with 3 apps (admin, dashboard, public)."
+            echo "Project structure detected: apps/admin, apps/dashboard, apps/vitrine."
+            echo "Create firebase.json with hosting configuration for all apps and .firebaserc with default project alias."
+            echo "Use placeholder project ID 'my-firebase-project'."
+            echo "----------------------------------------------------------------"
+        fi
+        return # Stop this phase
+    fi
+
+    # --- Compare projectIds for consistency ---
+    local ref_project_id
+    ref_project_id=$(jq -r '.environments.firebaserc.default // empty' "$CONFIG_RESULTS_FILE")
+
+    if [ -z "$ref_project_id" ]; then
+        log_msg "WARNING" "No default project ID found in .firebaserc."
+        temp_coherence_array=$(echo "$temp_coherence_array" | jq '. + [{"check": "Default projectId in .firebaserc", "status": "WARNING", "message": "Not set"}]')
+    else
+        temp_divergences_array=$(echo "$temp_divergences_array" | jq --arg pid "$ref_project_id" '. + [{"source": ".firebaserc (default)", "projectId": $pid}]')
+    fi
+
+    # Compare with firebase.json
+    local firebase_json_pid
+    firebase_json_pid=$(jq -r '.environments.firebase_json.projectId // empty' "$CONFIG_RESULTS_FILE")
+    if [ -n "$firebase_json_pid" ]; then
+        temp_divergences_array=$(echo "$temp_divergences_array" | jq --arg pid "$firebase_json_pid" '. + [{"source": "firebase.json", "projectId": $pid}]')
+        if [ -n "$ref_project_id" ] && [ "$ref_project_id" != "$firebase_json_pid" ]; then
+            log_msg "WARNING" "projectId in firebase.json ('$firebase_json_pid') differs from .firebaserc ('$ref_project_id')."
+            OVERALL_STATUS="WARNING"
+        fi
+    fi
+
+    # Compare with .env files
+    local env_pids
+    env_pids=$(jq -c '.environments.env_files[] | select(.keys."project-id") | {file: .file, projectId: .keys."project-id"}' "$CONFIG_RESULTS_FILE")
+    while IFS= read -r env_pid_obj; do
+        local file=$(echo "$env_pid_obj" | jq -r '.file')
+        local pid=$(echo "$env_pid_obj" | jq -r '.projectId')
+        temp_divergences_array=$(echo "$temp_divergences_array" | jq --arg file "$file" --arg pid "$pid" '. + [{"source": $file, "projectId": $pid}]')
+        if [ -n "$ref_project_id" ] && [ "$ref_project_id" != "$pid" ]; then
+            log_msg "WARNING" "projectId in $file ('$pid') differs from .firebaserc ('$ref_project_id')."
+            OVERALL_STATUS="WARNING"
+        fi
+    done <<< "$env_pids"
+
+    local unique_pids
+    unique_pids=$(echo "$temp_divergences_array" | jq -r 'map(.projectId) | unique | length')
+    if [ "$unique_pids" -le 1 ]; then
+        log_msg "INFO" "Project IDs are consistent across all detected files."
+        temp_coherence_array=$(echo "$temp_coherence_array" | jq '. + [{"check": "Project ID Consistency", "status": "OK", "message": "All project IDs match"}]')
+    else
+        log_msg "WARNING" "Project ID inconsistency detected. See details in the report."
+        OVERALL_STATUS="WARNING"
+        temp_coherence_array=$(echo "$temp_coherence_array" | jq '. + [{"check": "Project ID Consistency", "status": "WARNING", "message": "Mismatch in project IDs found"}]')
+    fi
+
+    # --- Check for presence of API keys and authDomain pattern ---
+    local api_key_count
+    api_key_count=$(jq '[.environments.env_files[].keys | select(."api-key")] | length' "$CONFIG_RESULTS_FILE")
+    if [ "$api_key_count" -eq 0 ]; then
+        log_msg "WARNING" "No Firebase API keys were detected in any .env files."
+        OVERALL_STATUS="WARNING"
+        temp_coherence_array=$(echo "$temp_coherence_array" | jq '. + [{"check": "API Key Presence", "status": "WARNING", "message": "No API keys found"}]')
+    fi
+
+    # --- Check for corresponding rule files ---
+    local services
+    services=$(jq -r '.environments.firebase_json | del(.projectId, .emulators, .hosting) | keys[]' "$CONFIG_RESULTS_FILE")
+    for service in $services; do
+        local rule_file=""
+        case $service in
+            "firestore") rule_file="firestore.rules" ;;
+            "storage") rule_file="storage.rules" ;;
+            "database") rule_file="database.rules.json" ;;
+        esac
+
+        if [ -n "$rule_file" ]; then
+            if [ -f "$rule_file" ]; then
+                log_msg "INFO" "Found rule file for $service: $rule_file"
+                temp_coherence_array=$(echo "$temp_coherence_array" | jq --arg s "$service" '. + [{"check": ("Rule file for " + $s), "status": "OK", "message": "Found"}]')
+            else
+                log_msg "WARNING" "$service is configured in firebase.json, but its rule file '$rule_file' is missing."
+                OVERALL_STATUS="WARNING"
+                temp_coherence_array=$(echo "$temp_coherence_array" | jq --arg s "$service" '. + [{"check": ("Rule file for " + $s), "status": "WARNING", "message": "Missing"}]')
+            fi
+        fi
+    done
+
+    # --- Final update to results file ---
+    jq --argjson checks "$temp_coherence_array" --argjson divs "$temp_divergences_array" \
+        '.coherence.checks = $checks | .coherence.divergences = $divs' \
+        "$CONFIG_RESULTS_FILE" > "$CONFIG_RESULTS_FILE.tmp" && mv "$CONFIG_RESULTS_FILE.tmp" "$CONFIG_RESULTS_FILE"
+}
+
 main() {
     echo "========================================"
     echo "🚢 TITANIC HEALTH CHECK"
@@ -285,6 +408,7 @@ main() {
     
     detect_config_files
     extract_environments_and_keys
+    verify_config_coherence
 
     log_msg "INFO" "Firebase config analysis complete. Results:"
     jq '.' "$CONFIG_RESULTS_FILE" | tee -a "$LOG_FILE"
